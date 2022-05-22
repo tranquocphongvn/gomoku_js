@@ -1,3 +1,6 @@
+// get the source gomoku_ai.js from https://github.com/SiyangHe2017/Gomoku/tree/master/javascript
+// modify it based on my rules.
+
 import * as Global from './global.js'
 
 let chessBoard = []
