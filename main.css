@@ -1,12 +1,16 @@
 :root {
     --cell-width-height: 35px;
-    --grid-columns: 30;
+    --grid-columns: 35;
     --grid-rows: 25;
     --grid-width: calc(var(--grid-columns) * var(--cell-width-height));
 }
 
 * {
     font-family: 'Roboto', sans-serif;
+}
+
+.root {
+    width: var(--grid-width)
 }
 
 .grid-caro .grid-column-headers {
