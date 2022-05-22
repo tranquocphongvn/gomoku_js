@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<!--[if lt IE 7]>      <html class="no-js lt-ie9 lt-ie8 lt-ie7"> <![endif]-->
+<!--[if IE 7]>         <html class="no-js lt-ie9 lt-ie8"> <![endif]-->
+<!--[if IE 8]>         <html class="no-js lt-ie9"> <![endif]-->
+<!--[if gt IE 8]>      <html class="no-js"> <!--<![endif]-->
+<html>
+    <head>
+        <meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <title>Gomoku Online</title>
+        <meta name="description" content="">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <link rel="preconnect" href="https://fonts.googleapis.com">
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@100&display=swap" rel="stylesheet">
+        <link rel="stylesheet" href="./main.css">
+    </head>
+    <body>
+        <!--[if lt IE 7]>
+            <p class="browsehappy">You are using an <strong>outdated</strong> browser. Please <a href="#">upgrade your browser</a> to improve your experience.</p>
+        <![endif]-->
+        <div class="root">
+            <h3>Gomoku board</h3>
+
+            <div class="grid-caro">
+                <div class="grid-column-headers">
+                    <div class="grid-column-header">1</div>
+                    <div class="grid-column-header">2</div>
+                    <div class="grid-column-header">3</div>  
+                </div>
+                <div class="grid-caro-container">
+                    <div class="grid-caro-cell">1</div>
+                    <div class="grid-caro-cell">2</div>
+                    <div class="grid-caro-cell">3</div>  
+                    <div class="grid-caro-cell">4</div>
+                    <div class="grid-caro-cell">5</div>
+                    <div class="grid-caro-cell">
+                        <span class="middle-item"><img class="newest caro-cell" src="./img/x.png" alt="x"></span>
+                    </div>
+                    <div class="grid-caro-cell">
+                        <span class="middle-item"><img class="caro-cell" src="./img/o.png" alt="o"></span>
+                    </div>
+                </div>
+                <div class="grid-controllers">
+                    <input class="controller" type="button" id="btn-pc-vs-pc" value="Computer vs. Computer">
+                    <div class="space"></div>
+                    <input class="controller" type="button" id="btn-human-vs-pc" value="Human (X) vs. Computer">
+                    <div class="space"></div>
+                    <input class="controller" type="button" id="btn-pc-vs-human" value="Computer (X) vs. Human">
+                    <div class="space"></div>
+                    <input class="controller" type="button" id="btn-human-vs-human" value="Human (X) vs. Human (O)">
+                    <div class="space"></div>
+                    <input class="controller" type="button" id="btn-restart" value="Restart game">
+                    <div class="space"></div>
+                    <div class="label inturn" id="playerX">Player X: Unknown</div>
+                    <div class="space2"></div>
+                    <div class="label2">vs</div>
+                    <div class="space2"></div>
+                    <div class="label" id="playerO">Player O: Unknown</div>
+                </div>
+            </div>
+            <div class="grid-row-headers">
+                <div class="grid-row-header">1</div>
+                <div class="grid-row-header">2</div>
+                <div class="grid-row-header">3</div>  
+            </div>
+        </div>
+        <script type="module" src="./js/global.js" async defer></script>
+        <script type="module" src="./js/main.js" async defer></script>
+    </body>
+</html>
