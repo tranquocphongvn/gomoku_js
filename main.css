@@ -1,7 +1,7 @@
 :root {
     --cell-width-height: 35px;
-    --grid-columns: 35;
-    --grid-rows: 25;
+    --grid-columns: 37;
+    --grid-rows: 28;
     --grid-width: calc(var(--grid-columns) * var(--cell-width-height));
 }
 
@@ -54,7 +54,7 @@
     width: 20px;
     height: 20px;
     position: absolute;
-    top:80px;
+    top:30px;
 }
 
 .grid-row-header {

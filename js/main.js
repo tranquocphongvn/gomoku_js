@@ -12,8 +12,6 @@ const $$ = document.querySelectorAll.bind(document)
 
 var isCaroX = true
 
-var isPlayer1Playing = false
-var isPlayer2Playing = false
 var isPCTurn = false
 var isPCvsPCMode = false
 var isHumanvsPCMode = false
@@ -26,8 +24,6 @@ function initCaroBoard() {
 
     isCaroX = true
 
-    isPlayer1Playing = false
-    isPlayer2Playing = false
     isPCTurn = false
 
     isPCvsPCMode = false
@@ -37,11 +33,11 @@ function initCaroBoard() {
 }
 
 function getPlayers(isPlayerX) {
-    let player = CARO_X
-    let opponent = CARO_O
-    if (!isPlayerX) {
-        player = CARO_O
-        opponent = CARO_X
+    let player = Global.CARO_X
+    let opponent = Global.CARO_O
+    if (!isCaroX) {
+        player = Global.CARO_O
+        opponent = Global.CARO_X
     }
 
     return {
@@ -91,19 +87,17 @@ function updateCaroBoard(row, column, gridCaroCell) {
         if (img) {
             img.classList.remove("newest")
         }
-        isPlayer1Playing = false
-        isPlayer2Playing = false
     }, BASE_TIMEOUT)
 
     setTimeout( () => {
         //let checkWhoWon = checkWonInRange(row, column)
         let checkWhoWon = theCaroBoard.checkWonInRange(row, column)
         if (checkWhoWon) {
+            isPCTurn = true // the board ignore on click event
             showWonItems(checkWhoWon)
-            
-            let msg = `${checkWhoWon.caroValue === Global.CARO_X? Global.PLAYER_X : checkWhoWon.caroValue === Global.CARO_O? Global.PLAYER_O : checkWhoWon.caroValue} has Won by [${checkWhoWon.direction}]!!! at (row: ${checkWhoWon.row}, column: ${checkWhoWon.column})`
+            console.log(`${checkWhoWon.caroValue === Global.CARO_X? Global.PLAYER_X : checkWhoWon.caroValue === Global.CARO_O? Global.PLAYER_O : checkWhoWon.caroValue} has Won by [${checkWhoWon.direction}]!!! at (row: ${checkWhoWon.row}, column: ${checkWhoWon.column}). Please restart the game`)
+
             setTimeout(() => { 
-                console.log(msg)
                 if (isPCvsPCMode) {
                     // restart autoplay again
                     startPCvsPCMode()
@@ -166,7 +160,7 @@ function putCaroValue(row, column) {
 
 // events handler
 gridCaroContainer.onclick = function(e) {
-    if (!isPCTurn && !isPCvsPCMode && !isPlayer1Playing && !isPlayer2Playing) {
+    if (!isPCTurn && !isPCvsPCMode) {
         const gridCaroCell = e.target.closest('.grid-caro-cell');
 
         if (gridCaroCell && !gridCaroCell.innerHTML)
@@ -179,7 +173,6 @@ gridCaroContainer.onclick = function(e) {
                 theCaroBoard.setFirstMove(row, column)
             }
             
-            isPlayer2Playing = true
             updateCaroBoard(row, column, gridCaroCell)
 
             if (isHumanvsPCMode && !isPCTurn) {
@@ -218,11 +211,8 @@ btnHumanvsPC.onclick = function(e) {
     isPCTurn = false
     isPCvsPCMode = false
     isPCvsHumanMode = false
+    initCaroBoard()
     isHumanvsPCMode = true
-    if (!isPlayer1Playing && !isPlayer2Playing) {
-        initCaroBoard()
-        isHumanvsPCMode = true
-    }
 }
 
 btnPCvsHuman.onclick = function(e) {
@@ -236,16 +226,14 @@ btnPCvsHuman.onclick = function(e) {
     isPCTurn = false
     isPCvsPCMode = false
     isHumanvsPCMode = false
+    initCaroBoard()
     isPCvsHumanMode = true
-    if (!isPlayer1Playing && !isPlayer2Playing) {
-        initCaroBoard()
-        isPCvsHumanMode = true
-        let ai_position = AI_position()
-        if (ai_position) {
-            putCaroValue(ai_position[0], ai_position[1])
-        }
-        isPCTurn = false
+
+    let ai_position = AI_position()
+    if (ai_position) {
+        putCaroValue(ai_position[0], ai_position[1])
     }
+    isPCTurn = false
 }
 
 btnHumanvsHuman.onclick = function(e) {
@@ -260,9 +248,7 @@ btnHumanvsHuman.onclick = function(e) {
     isPCvsPCMode = false
     isHumanvsPCMode = false
     isPCvsHumanMode = false
-    if (!isPlayer1Playing && !isPlayer2Playing) {
-        initCaroBoard()
-    }
+    initCaroBoard()
 }
 
 
@@ -309,13 +295,18 @@ function AI_position() {
     let current_value = 0;
     let max_position = null;
     let current_position = [0, 0];
-    let current_value_AI_color = 0;
-    let current_value_non_AI_color = 0;
+    //let current_value_AI_color = 0;
+    //let current_value_non_AI_color = 0;
+    let current_player_value = 0
+    let current_opponent_value = 0
     let chessBoard = theCaroBoard.getBoard()
 
     let firstMove = theCaroBoard.getFirstMove()
     let secondMove = theCaroBoard.getSecondMove()
     let availablePositions = []
+
+    let players = getPlayers()
+    //console.log('players:', players)
 
     if (firstMove && !secondMove) {
         // calculate the secondMove Value
@@ -346,12 +337,15 @@ function AI_position() {
         for (var col = 0; col < Global.MAX_COLUMNS; col++) {
             if (chessBoard[row][col] === color_none) {
                 current_position = [row, col];
-                current_value_AI_color = evaluate(current_position, AI_color, chessBoard);
-                current_value_non_AI_color = evaluate(current_position, human_color, chessBoard);
-                if (current_value_non_AI_color < 0) {
-                    current_value_non_AI_color = 0;
+                //current_value_AI_color = evaluate(current_position, AI_color, chessBoard);
+                //current_value_non_AI_color = evaluate(current_position, human_color, chessBoard);
+                current_player_value = evaluate(current_position, players.player, chessBoard)
+                current_opponent_value = evaluate(current_position, players.opponent, chessBoard)
+
+                if (current_opponent_value < 0) {
+                    current_opponent_value = 0;
                 }
-                current_value = current_value_AI_color + current_value_non_AI_color;
+                current_value = current_player_value + current_opponent_value;
                 if (current_value > max_value) {
                     //console.log('AI_position. current_value:', current_value, '. max_value:', max_value)
                     max_value = current_value;
@@ -365,11 +359,14 @@ function AI_position() {
             }
         }
     }
+    if (max_value >= 100000) {
+        console.log('AI max_value:', max_value)
+    }
     
     if (availablePositions && availablePositions.length >= 2 && max_value > 0) {
-        console.log('AI max_value:', max_value, '; available positions:', availablePositions)
+        //console.log('AI max_value:', max_value, '; available positions:', availablePositions)
         max_position = availablePositions[Math.floor(Math.random() * availablePositions.length)]
-        console.log('AI random selected position:', max_position)
+        //console.log('AI random selected position:', max_position)
     }
     return max_position;
 }
@@ -400,15 +397,9 @@ function computerPlay(caroBoard) {
 }
 
 
-
 function alphaBetaPruning(row, column) {
     // if there is no space (cant play) in 4 ways, it means Pruning
-    if (pruneHorizontal(row, column) && pruneVertical(row, column) && pruneMainDiagonal(row, column) && pruneMinorDiagonal(row, column))
-    {
-        return true
-    }
-    
-    return false
+    return (pruneHorizontal(row, column) && pruneVertical(row, column) && pruneMainDiagonal(row, column) && pruneMinorDiagonal(row, column))
 }
 
 function pruneHorizontal(row, column) {
