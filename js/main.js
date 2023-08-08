@@ -10,34 +10,50 @@ const BASE_TIMEOUT = 200
 const $ = document.querySelector.bind(document)
 const $$ = document.querySelectorAll.bind(document)
 
+const PlayingMode = {
+    PCvsPC: 'PCvsPC',
+    HumanvsPC: 'HumanvsPC',
+    PCvsHuman: 'PCvsHuman',
+    HumanvsHuman: 'HumanvsHuman',
+    Unknown: 'Unknown'
+}
+
 var isCaroX = true
 
+var isPlayer1Playing = false
+var isPlayer2Playing = false
 var isPCTurn = false
-var isPCvsPCMode = false
-var isHumanvsPCMode = false
-var isPCvsHumanMode = false
-var isHumanvsHumanMode = false
+var currentMode = PlayingMode.Unknown;
+var isEndGame = false
 
-function initCaroBoard() {
+function initCaroBoard(playMode) {
+    if (playMode === PlayingMode.Unknown)
+        lblPlayerX.classList.remove('inturn-x')
+    else
+        lblPlayerX.classList.add('inturn-x')
+
+    lblPlayerO.classList.remove('inturn-o')
+
     gridCaroContainer.innerHTML = buildCaroGrid(Global.MAX_ROWS, Global.MAX_COLUMNS)
     theCaroBoard.initBoard()
 
     isCaroX = true
 
+    isPlayer1Playing = false
+    isPlayer2Playing = false
     isPCTurn = false
 
-    isPCvsPCMode = false
-    isHumanvsPCMode = false
-    isPCvsHumanMode = false
-    isHumanvsHumanMode = false
+    isEndGame = false
+
+    return playMode
 }
 
 function getPlayers(isPlayerX) {
-    let player = Global.CARO_X
-    let opponent = Global.CARO_O
-    if (!isCaroX) {
-        player = Global.CARO_O
-        opponent = Global.CARO_X
+    let player = CARO_X
+    let opponent = CARO_O
+    if (!isPlayerX) {
+        player = CARO_O
+        opponent = CARO_X
     }
 
     return {
@@ -45,6 +61,7 @@ function getPlayers(isPlayerX) {
         opponent
     }
 }
+
 const gridColumnHeaders = $(".grid-column-headers")
 const gridRowHeaders = $(".grid-row-headers")
 const gridCaroContainer = $(".grid-caro-container")
@@ -62,7 +79,7 @@ gridCaroContainer.innerHTML = buildCaroGrid(Global.MAX_ROWS, Global.MAX_COLUMNS)
 gridColumnHeaders.innerHTML = buildColumnHeaders(Global.MAX_COLUMNS)
 gridRowHeaders.innerHTML = buildRowHeaders(Global.MAX_ROWS)
 
-initCaroBoard()
+currentMode = initCaroBoard(PlayingMode.Unknown)
 
 
 // update Caro Board state
@@ -71,15 +88,15 @@ function updateCaroBoard(row, column, gridCaroCell) {
         theCaroBoard.putCaroValue(Global.CARO_X, row, column)
         gridCaroCell.innerHTML = Global.CaroXSpan
         
-        lblPlayerX.classList.remove('inturn')
-        lblPlayerO.classList.add('inturn')
+        lblPlayerX.classList.remove('inturn-x')
+        lblPlayerO.classList.add('inturn-o')
     }
     else {
         theCaroBoard.putCaroValue(Global.CARO_O, row, column)
         gridCaroCell.innerHTML = Global.CaroOSpan
 
-        lblPlayerX.classList.add('inturn')
-        lblPlayerO.classList.remove('inturn')
+        lblPlayerX.classList.add('inturn-x')
+        lblPlayerO.classList.remove('inturn-o')
     }
 
     setTimeout( () => {
@@ -87,30 +104,35 @@ function updateCaroBoard(row, column, gridCaroCell) {
         if (img) {
             img.classList.remove("newest")
         }
+        isPlayer1Playing = false
+        isPlayer2Playing = false
     }, BASE_TIMEOUT)
 
     setTimeout( () => {
         //let checkWhoWon = checkWonInRange(row, column)
         let checkWhoWon = theCaroBoard.checkWonInRange(row, column)
         if (checkWhoWon) {
-            isPCTurn = true // the board ignore on click event
-            showWonItems(checkWhoWon)
-            console.log(`${checkWhoWon.caroValue === Global.CARO_X? Global.PLAYER_X : checkWhoWon.caroValue === Global.CARO_O? Global.PLAYER_O : checkWhoWon.caroValue} has Won by [${checkWhoWon.direction}]!!! at (row: ${checkWhoWon.row}, column: ${checkWhoWon.column}). Please restart the game`)
+            isEndGame = true
 
+            showWonItems(checkWhoWon)
+            
+            let msg = `${checkWhoWon.caroValue === Global.CARO_X? Global.PLAYER_X : checkWhoWon.caroValue === Global.CARO_O? Global.PLAYER_O : checkWhoWon.caroValue} has Won by [${checkWhoWon.direction}]!!! at (row: ${checkWhoWon.row}, column: ${checkWhoWon.column})`
             setTimeout(() => { 
-                if (isPCvsPCMode) {
+                console.log(msg)
+                if (currentMode === PlayingMode.PCvsPC) {
                     // restart autoplay again
                     startPCvsPCMode()
                 }
             }, 3000)
         }
-        else if (isPCvsPCMode) {
+        else if (currentMode === PlayingMode.PCvsPC) {
             let ai_position = AI_position()
             if (ai_position) {
                 //console.log('AI_position:', ai_position)
                 putCaroValue(ai_position[0], ai_position[1])
             }
             else {
+                isEndGame = true
                 console.log('AI_position: no available position. Please restart the game')
                 theCaroBoard.checkWonInRange(0, 0, Global.MAX_ROWS, Global.MAX_COLUMNS)
                 setTimeout(() => { 
@@ -119,7 +141,7 @@ function updateCaroBoard(row, column, gridCaroCell) {
                 }, 3000)                
             }
         }
-        else if (isHumanvsPCMode && isPCTurn) {
+        else if (currentMode === PlayingMode.HumanvsPC && isPCTurn) {
             let ai_position = AI_position()
             if (ai_position) {
                 //console.log('AI_position:', ai_position)
@@ -131,7 +153,7 @@ function updateCaroBoard(row, column, gridCaroCell) {
             }
             isPCTurn = false
         }
-        else if (isPCvsHumanMode && isPCTurn) {
+        else if (currentMode === PlayingMode.PCvsHuman && isPCTurn) {
             let ai_position = AI_position()
             if (ai_position) {
                 //console.log('AI_position:', ai_position)
@@ -160,25 +182,39 @@ function putCaroValue(row, column) {
 
 // events handler
 gridCaroContainer.onclick = function(e) {
-    if (!isPCTurn && !isPCvsPCMode) {
+    if (isEndGame) {
+        console.log("Please restart the game!!!")
+        return
+    }
+
+    //console.log('Before. isPCTurn:', isPCTurn, ', currentMode:', currentMode, ', isPlayer1 Playing:', isPlayer1Playing, ', isPlayer2 Playing:', isPlayer2Playing)
+    if (!isPCTurn && (currentMode !== PlayingMode.PCvsPC) && !isPlayer1Playing && !isPlayer2Playing) {
         const gridCaroCell = e.target.closest('.grid-caro-cell');
 
         if (gridCaroCell && !gridCaroCell.innerHTML)
         {
+            if (currentMode === PlayingMode.Unknown) {
+                currentMode = PlayingMode.HumanvsPC
+                startHumanvsPCMode(false)
+            }
+
             let row = Number(gridCaroCell.dataset.row)
             let column =  Number(gridCaroCell.dataset.column)
-
+            
             if (!theCaroBoard.getFirstMove())
             {
                 theCaroBoard.setFirstMove(row, column)
             }
             
+            //console.log('After. isPCTurn:', isPCTurn, ', currentMode:', currentMode, ', isPlayer1 Playing:', isPlayer1Playing, ', isPlayer2 Playing:', isPlayer2Playing)
+
+            //isPlayer2Playing = true
             updateCaroBoard(row, column, gridCaroCell)
 
-            if (isHumanvsPCMode && !isPCTurn) {
+            if (currentMode === PlayingMode.HumanvsPC && !isPCTurn) {
                 isPCTurn = true
             }
-            else if (isPCvsHumanMode && !isPCTurn) {
+            else if (currentMode === PlayingMode.PCvsHuman && !isPCTurn) {
                 isPCTurn = true
             }
         }
@@ -186,7 +222,7 @@ gridCaroContainer.onclick = function(e) {
 }
 
 btnPCvsPC.onclick = function(e) {
-    if (!isPCvsPCMode) {
+    if (currentMode !== PlayingMode.PCvsPC) {
         btnPCvsPC.classList.add('active')
         btnHumanvsPC.classList.remove('active')
         btnPCvsHuman.classList.remove('active')
@@ -196,23 +232,12 @@ btnPCvsPC.onclick = function(e) {
         
         startPCvsPCMode()
 
-        isPCvsPCMode = true
+        currentMode = PlayingMode.PCvsPC
     }
 }
 
 btnHumanvsPC.onclick = function(e) {
-    btnPCvsPC.classList.remove('active')
-    btnHumanvsPC.classList.add('active')
-    btnPCvsHuman.classList.remove('active')
-    btnHumanvsHuman.classList.remove('active')
-    lblPlayerX.innerText = "Player X: Human"
-    lblPlayerO.innerText = "Player O: Computer"
-    
-    isPCTurn = false
-    isPCvsPCMode = false
-    isPCvsHumanMode = false
-    initCaroBoard()
-    isHumanvsPCMode = true
+    startHumanvsPCMode(true)
 }
 
 btnPCvsHuman.onclick = function(e) {
@@ -224,16 +249,15 @@ btnPCvsHuman.onclick = function(e) {
     lblPlayerO.innerText = "Player O: Human"
     
     isPCTurn = false
-    isPCvsPCMode = false
-    isHumanvsPCMode = false
-    initCaroBoard()
-    isPCvsHumanMode = true
+    if (!isPlayer1Playing && !isPlayer2Playing) {
+        currentMode = initCaroBoard(PlayingMode.PCvsHuman)
 
-    let ai_position = AI_position()
-    if (ai_position) {
-        putCaroValue(ai_position[0], ai_position[1])
+        let ai_position = AI_position()
+        if (ai_position) {
+            putCaroValue(ai_position[0], ai_position[1])
+        }
+        isPCTurn = false
     }
-    isPCTurn = false
 }
 
 btnHumanvsHuman.onclick = function(e) {
@@ -245,10 +269,9 @@ btnHumanvsHuman.onclick = function(e) {
     lblPlayerO.innerText = "Player O: Human"
 
     isPCTurn = false
-    isPCvsPCMode = false
-    isHumanvsPCMode = false
-    isPCvsHumanMode = false
-    initCaroBoard()
+    if (!isPlayer1Playing && !isPlayer2Playing) {
+        currentMode = initCaroBoard(PlayingMode.HumanvsHuman)
+    }
 }
 
 
@@ -261,20 +284,14 @@ btnRestart.onclick = function(e) {
     lblPlayerO.innerText = "Player O: Unknown"
 
     isPCTurn = false
-    isPCvsPCMode = false
-    isHumanvsPCMode = false
-    isPCvsHumanMode = false
-    initCaroBoard()
+
+    currentMode = initCaroBoard(PlayingMode.Unknown)
 }
 
 function startPCvsPCMode()
 {
-    initCaroBoard()
+    currentMode = initCaroBoard(PlayingMode.PCvsPC)
 
-    isHumanvsPCMode = false
-    isPCvsHumanMode = false
-    isHumanvsHumanMode = false
-    isPCvsPCMode = true
     isCaroX = true
 
     let ai_position = AI_position()
@@ -283,6 +300,22 @@ function startPCvsPCMode()
     }
     isPCTurn = false
 }
+
+function startHumanvsPCMode(initBoard = true)
+{
+    btnPCvsPC.classList.remove('active')
+    btnHumanvsPC.classList.add('active')
+    btnPCvsHuman.classList.remove('active')
+    btnHumanvsHuman.classList.remove('active')
+    lblPlayerX.innerText = "Player X: Human"
+    lblPlayerO.innerText = "Player O: Computer"
+    
+    isPCTurn = false
+    if (!isPlayer1Playing && !isPlayer2Playing && initBoard) {
+        currentMode = initCaroBoard(PlayingMode.HumanvsPC)
+    }
+}
+
 
 function AI_position() {
     let color_none = Global.EMPTY_CARO_VALUE;
@@ -295,18 +328,13 @@ function AI_position() {
     let current_value = 0;
     let max_position = null;
     let current_position = [0, 0];
-    //let current_value_AI_color = 0;
-    //let current_value_non_AI_color = 0;
-    let current_player_value = 0
-    let current_opponent_value = 0
+    let current_value_AI_color = 0;
+    let current_value_non_AI_color = 0;
     let chessBoard = theCaroBoard.getBoard()
 
     let firstMove = theCaroBoard.getFirstMove()
     let secondMove = theCaroBoard.getSecondMove()
     let availablePositions = []
-
-    let players = getPlayers()
-    //console.log('players:', players)
 
     if (firstMove && !secondMove) {
         // calculate the secondMove Value
@@ -337,15 +365,12 @@ function AI_position() {
         for (var col = 0; col < Global.MAX_COLUMNS; col++) {
             if (chessBoard[row][col] === color_none) {
                 current_position = [row, col];
-                //current_value_AI_color = evaluate(current_position, AI_color, chessBoard);
-                //current_value_non_AI_color = evaluate(current_position, human_color, chessBoard);
-                current_player_value = evaluate(current_position, players.player, chessBoard)
-                current_opponent_value = evaluate(current_position, players.opponent, chessBoard)
-
-                if (current_opponent_value < 0) {
-                    current_opponent_value = 0;
+                current_value_AI_color = evaluate(current_position, AI_color, chessBoard);
+                current_value_non_AI_color = evaluate(current_position, human_color, chessBoard);
+                if (current_value_non_AI_color < 0) {
+                    current_value_non_AI_color = 0;
                 }
-                current_value = current_player_value + current_opponent_value;
+                current_value = current_value_AI_color + current_value_non_AI_color;
                 if (current_value > max_value) {
                     //console.log('AI_position. current_value:', current_value, '. max_value:', max_value)
                     max_value = current_value;
@@ -359,14 +384,15 @@ function AI_position() {
             }
         }
     }
-    if (max_value >= 100000) {
-        console.log('AI max_value:', max_value)
-    }
     
     if (availablePositions && availablePositions.length >= 2 && max_value > 0) {
-        //console.log('AI max_value:', max_value, '; available positions:', availablePositions)
-        max_position = availablePositions[Math.floor(Math.random() * availablePositions.length)]
-        //console.log('AI random selected position:', max_position)
+        console.log('AI max_value:', max_value, '; available positions:', availablePositions)
+        let randomIndex = Math.floor(Math.random() * availablePositions.length);
+        max_position = availablePositions[randomIndex]
+        console.log('AI random index:', randomIndex, '; selected position:', max_position)
+    }
+    else if (max_value >= 2000) {
+        console.log('AI max_value:', max_value, '; position:', max_position)
     }
     return max_position;
 }
@@ -397,9 +423,15 @@ function computerPlay(caroBoard) {
 }
 
 
+
 function alphaBetaPruning(row, column) {
     // if there is no space (cant play) in 4 ways, it means Pruning
-    return (pruneHorizontal(row, column) && pruneVertical(row, column) && pruneMainDiagonal(row, column) && pruneMinorDiagonal(row, column))
+    if (pruneHorizontal(row, column) && pruneVertical(row, column) && pruneMainDiagonal(row, column) && pruneMinorDiagonal(row, column))
+    {
+        return true
+    }
+    
+    return false
 }
 
 function pruneHorizontal(row, column) {

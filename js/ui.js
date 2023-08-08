@@ -19,7 +19,7 @@ function buildCaroGrid(maxRows, maxColumns) {
 function buildColumnHeaders(maxColumns) {
     let gridHeaderHtml = ''
     for (let i = 1; i <= maxColumns; i++) {
-        gridHeaderHtml += `<div class="grid-column-header">${i}</div>\n`
+        gridHeaderHtml += `<div class="grid-column-header">${i-1}</div>\n`
     }
     return gridHeaderHtml
 }
@@ -27,7 +27,7 @@ function buildColumnHeaders(maxColumns) {
 function buildRowHeaders(maxRows) {
     let gridHeaderHtml = ''
     for (let i = 1; i <= maxRows; i++) {
-        gridHeaderHtml += `<div class="grid-row-header"><span class="middle-item">${i}</span></div>\n`
+        gridHeaderHtml += `<div class="grid-row-header"><span class="middle-item">${i-1}</span></div>\n`
     }
     return gridHeaderHtml
 }

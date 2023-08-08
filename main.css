@@ -1,7 +1,7 @@
 :root {
     --cell-width-height: 35px;
-    --grid-columns: 37;
-    --grid-rows: 28;
+    --grid-columns: 30;
+    --grid-rows: 25;
     --grid-width: calc(var(--grid-columns) * var(--cell-width-height));
 }
 
@@ -9,8 +9,8 @@
     font-family: 'Roboto', sans-serif;
 }
 
-.root {
-    width: var(--grid-width)
+.body {
+    width: 1900px;
 }
 
 .grid-caro .grid-column-headers {
@@ -20,7 +20,6 @@
     background-color: #fff;
     margin: 0;
     padding: 0;
-    width: var(--grid-width)
 }
 
 .grid-column-headers {
@@ -32,6 +31,7 @@
     position: relative;
     align-content: center;
     text-align: center;
+    width: calc(var(--grid-width) - 25px);
 }
 
 .grid-column-header {
@@ -54,7 +54,7 @@
     width: 20px;
     height: 20px;
     position: absolute;
-    top:30px;
+    top:80px;
 }
 
 .grid-row-header {
@@ -111,11 +111,15 @@
     color: black;
 }
 
-.inturn {
+.inturn-x {
     color: blue;
     font-weight: 1000;
 }
 
+.inturn-o {
+    color: red;
+    font-weight: 1000;
+}
 .grid-caro-container {
     display: grid;
     grid-template-columns: repeat(var(--grid-columns), var(--cell-width-height));
