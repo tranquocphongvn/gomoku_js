@@ -51,9 +51,9 @@ function position_color(position) {
     return color;
 }
 
-// the boundary is available, it means not bound by opponent
+// the un-boundary is available, it means not bound by opponent, or myself
 // dont apply for small value <= 200
-function is_bound_available(current_position, direction, left_bound, right_bound, color) {
+function is_unbound_available(current_position, direction, left_bound, right_bound, color) {
     /*
     return (new_position_color(current_position, direction, -5) === color_none) ||
         (new_position_color(current_position, direction, +1) === color_none);
@@ -80,7 +80,7 @@ export default function evaluate(current_position, color, caroBoard){
             new_position_color(current_position, direction, -3) === color &&
             new_position_color(current_position, direction, -4) === color &&
             position_color(current_position) === color &&
-            is_bound_available(current_position, direction, -5, 1, color))
+            is_unbound_available(current_position, direction, -5, 1, color))
         ){            
             console.log('?1111[1]?')
 
@@ -96,7 +96,7 @@ export default function evaluate(current_position, color, caroBoard){
             new_position_color(current_position, direction, -3) === color &&
             position_color(current_position) === color &&
             new_position_color(current_position, direction, 1) === color &&
-            is_bound_available(current_position, direction, -4, 2, color))
+            is_unbound_available(current_position, direction, -4, 2, color))
         ){            
             console.log('?111[1]1?')
 
@@ -112,7 +112,7 @@ export default function evaluate(current_position, color, caroBoard){
             position_color(current_position) === color &&
             new_position_color(current_position, direction, 1) === color &&
             new_position_color(current_position, direction, -2) === color &&
-            is_bound_available(current_position, direction, -3, 3, color))
+            is_unbound_available(current_position, direction, -3, 3, color))
         ){            
             console.log('?11[1]11?')
 
@@ -130,13 +130,13 @@ export default function evaluate(current_position, color, caroBoard){
             new_position_color(current_position, direction, -2) === color &&
             new_position_color(current_position, direction, -3) === color &&
             new_position_color(current_position, direction, -4) === color && 
-            is_bound_available(current_position, direction, -5, 1, color))
+            is_unbound_available(current_position, direction, -5, 1, color))
             ||
             (new_position_color(current_position, direction+4, -1) === color &&
             new_position_color(current_position, direction+4, -2) === color &&
             new_position_color(current_position, direction+4, -3) === color &&
             new_position_color(current_position, direction+4, -4) === color &&
-            is_bound_available(current_position, direction+4, -5, 1, color))
+            is_unbound_available(current_position, direction+4, -5, 1, color))
         ){            
             if(color === AI_color){
                 value += 500000;
@@ -149,13 +149,13 @@ export default function evaluate(current_position, color, caroBoard){
             new_position_color(current_position, direction, -2) === color &&
             new_position_color(current_position, direction, -3) === color &&
             new_position_color(current_position, direction, 1) === color && 
-            is_bound_available(current_position, direction, -4, 2, color))
+            is_unbound_available(current_position, direction, -4, 2, color))
             ||
             (new_position_color(current_position, direction+4, -1) === color &&
             new_position_color(current_position, direction+4, -2) === color &&
             new_position_color(current_position, direction+4, -3) === color &&
             new_position_color(current_position, direction+4, 1) === color && 
-            is_bound_available(current_position, direction+4, -4, 2, color))
+            is_unbound_available(current_position, direction+4, -4, 2, color))
         ){
             if(color === AI_color){
                 value += 500000;
@@ -168,7 +168,7 @@ export default function evaluate(current_position, color, caroBoard){
             new_position_color(current_position, direction, -2) === color &&
             new_position_color(current_position, direction, 1) === color &&
             new_position_color(current_position, direction, 2) === color && 
-            is_bound_available(current_position, direction, -3, 3, color)
+            is_unbound_available(current_position, direction, -3, 3, color)
         ){
             if(color === AI_color){
                 value += 500000;
@@ -178,7 +178,7 @@ export default function evaluate(current_position, color, caroBoard){
         }
 
         // ----------(2) 活4 011110 4320分
-        // 活4 0111*0 / ?_111*_?
+        // 活4 0111*0 / ?_111*_?  / 6 spaces, dont check bound
         if((new_position_color(current_position, direction, -1) === color &&
             new_position_color(current_position, direction, -2) === color &&
             new_position_color(current_position, direction, -3) === color &&
@@ -197,7 +197,7 @@ export default function evaluate(current_position, color, caroBoard){
             }
             continue;
         }
-        // 活4 011*10 / ?_11*1_?
+        // 活4 011*10 / ?_11*1_? / 6 spaces, dont check bound
         if((new_position_color(current_position, direction, -1) === color &&
             new_position_color(current_position, direction, -2) === color &&
             new_position_color(current_position, direction, 1) === color &&
@@ -328,13 +328,13 @@ export default function evaluate(current_position, color, caroBoard){
             new_position_color(current_position, direction, -2) === color &&
             new_position_color(current_position, direction, -3) === color &&
             new_position_color(current_position, direction, 1) === color_none && 
-            is_bound_available(current_position, direction, -4, 2, color))
+            is_unbound_available(current_position, direction, -4, 2, color))
             ||
             (new_position_color(current_position, direction+4, -1) === color &&
             new_position_color(current_position, direction+4, -2) === color &&
             new_position_color(current_position, direction+4, -3) === color &&
             new_position_color(current_position, direction+4, 1) === color_none && 
-            is_bound_available(current_position, direction+4, -4, 2, color))
+            is_unbound_available(current_position, direction+4, -4, 2, color))
         ){
             value += 1770;
             continue;
@@ -345,13 +345,13 @@ export default function evaluate(current_position, color, caroBoard){
             new_position_color(current_position, direction, -2) === color &&
             new_position_color(current_position, direction, 1) === color &&
             new_position_color(current_position, direction, 2) === color_none && 
-            is_bound_available(current_position, direction, -3, 3, color))
+            is_unbound_available(current_position, direction, -3, 3, color))
             ||
             (new_position_color(current_position, direction+4, -1) === color &&
             new_position_color(current_position, direction+4, -2) === color &&
             new_position_color(current_position, direction+4, 1) === color &&
             new_position_color(current_position, direction+4, 2) === color_none && 
-            is_bound_available(current_position, direction+4, -3, 3, color))
+            is_unbound_available(current_position, direction+4, -3, 3, color))
         ){
             value += 1770;
             continue;
@@ -362,13 +362,13 @@ export default function evaluate(current_position, color, caroBoard){
             new_position_color(current_position, direction, 2) === color &&
             new_position_color(current_position, direction, -1) === color &&
             new_position_color(current_position, direction, 3) === color_none && 
-            is_bound_available(current_position, direction, -2, 4, color))
+            is_unbound_available(current_position, direction, -2, 4, color))
             ||
             (new_position_color(current_position, direction+4, 1) === color &&
             new_position_color(current_position, direction+4, 2) === color &&
             new_position_color(current_position, direction+4, -1) === color &&
             new_position_color(current_position, direction+4, 3) === color_none && 
-            is_bound_available(current_position, direction+4, -2, 4, color))
+            is_unbound_available(current_position, direction+4, -2, 4, color))
         ){
             value += 1770;
             continue;
@@ -379,13 +379,13 @@ export default function evaluate(current_position, color, caroBoard){
             new_position_color(current_position, direction, 2) === color &&
             new_position_color(current_position, direction, 3) === color &&
             new_position_color(current_position, direction, 4) === color_none && 
-            is_bound_available(current_position, direction, -1, 5, color))
+            is_unbound_available(current_position, direction, -1, 5, color))
             ||
             (new_position_color(current_position, direction+4, 1) === color &&
             new_position_color(current_position, direction+4, 2) === color &&
             new_position_color(current_position, direction+4, 3) === color &&
             new_position_color(current_position, direction+4, 4) === color_none && 
-            is_bound_available(current_position, direction+4, -1, 5, color))
+            is_unbound_available(current_position, direction+4, -1, 5, color))
         ){
             value += 1770;
             continue;
@@ -397,13 +397,13 @@ export default function evaluate(current_position, color, caroBoard){
             new_position_color(current_position, direction, 2) === color &&
             new_position_color(current_position, direction, 3) === color &&
             new_position_color(current_position, direction, 1) === color_none && 
-            is_bound_available(current_position, direction, -2, 4, color))
+            is_unbound_available(current_position, direction, -2, 4, color))
             ||
             (new_position_color(current_position, direction+4, -1) === color &&
             new_position_color(current_position, direction+4, 2) === color &&
             new_position_color(current_position, direction+4, 3) === color &&
             new_position_color(current_position, direction+4, 1) === color_none && 
-            is_bound_available(current_position, direction+4, -2, 4, color))
+            is_unbound_available(current_position, direction+4, -2, 4, color))
         ){
             value += 720;
             continue;
@@ -414,13 +414,13 @@ export default function evaluate(current_position, color, caroBoard){
             new_position_color(current_position, direction, 3) === color &&
             new_position_color(current_position, direction, 4) === color &&
             new_position_color(current_position, direction, 2) === color_none && 
-            is_bound_available(current_position, direction, -1, 5, color))
+            is_unbound_available(current_position, direction, -1, 5, color))
             ||
             (new_position_color(current_position, direction+4, 1) === color &&
             new_position_color(current_position, direction+4, 3) === color &&
             new_position_color(current_position, direction+4, 4) === color &&
             new_position_color(current_position, direction+4, 2) === color_none && 
-            is_bound_available(current_position, direction+4, -1, 5, color))
+            is_unbound_available(current_position, direction+4, -1, 5, color))
         ){
             value += 720;
             continue;
@@ -432,13 +432,13 @@ export default function evaluate(current_position, color, caroBoard){
             new_position_color(current_position, direction, -2) === color &&
             new_position_color(current_position, direction, 2) === color &&
             new_position_color(current_position, direction, 1) === color_none && 
-            is_bound_available(current_position, direction, -3, 3, color))
+            is_unbound_available(current_position, direction, -3, 3, color))
             ||
             (new_position_color(current_position, direction+4, -1) === color &&
             new_position_color(current_position, direction+4, -2) === color &&
             new_position_color(current_position, direction+4, 2) === color &&
             new_position_color(current_position, direction+4, 1) === color_none && 
-            is_bound_available(current_position, direction+4, -3, 3, color))
+            is_unbound_available(current_position, direction+4, -3, 3, color))
         ){
             value += 745;
             continue;
@@ -449,13 +449,13 @@ export default function evaluate(current_position, color, caroBoard){
             new_position_color(current_position, direction, 1) === color &&
             new_position_color(current_position, direction, 3) === color &&
             new_position_color(current_position, direction, 2) === color_none && 
-            is_bound_available(current_position, direction, -2, 4, color))
+            is_unbound_available(current_position, direction, -2, 4, color))
             ||
             (new_position_color(current_position, direction+4, -1) === color &&
             new_position_color(current_position, direction+4, 1) === color &&
             new_position_color(current_position, direction+4, 3) === color &&
             new_position_color(current_position, direction+4, 2) === color_none && 
-            is_bound_available(current_position, direction+4, -2, 4, color))
+            is_unbound_available(current_position, direction+4, -2, 4, color))
         ){
             value += 745;
             continue;
@@ -466,13 +466,13 @@ export default function evaluate(current_position, color, caroBoard){
             new_position_color(current_position, direction, 2) === color &&
             new_position_color(current_position, direction, 4) === color &&
             new_position_color(current_position, direction, 3) === color_none && 
-            is_bound_available(current_position, direction, -1, 5, color))
+            is_unbound_available(current_position, direction, -1, 5, color))
             ||
             (new_position_color(current_position, direction+4, 1) === color &&
             new_position_color(current_position, direction+4, 2) === color &&
             new_position_color(current_position, direction+4, 4) === color &&
             new_position_color(current_position, direction+4, 3) === color_none && 
-            is_bound_available(current_position, direction+4, -1, 5, color))
+            is_unbound_available(current_position, direction+4, -1, 5, color))
         ){
             value += 745;
             continue;
@@ -483,20 +483,20 @@ export default function evaluate(current_position, color, caroBoard){
             new_position_color(current_position, direction, -3) === color &&
             new_position_color(current_position, direction, -4) === color &&
             new_position_color(current_position, direction, -1) === color_none && 
-            is_bound_available(current_position, direction, -5, 1, color))
+            is_unbound_available(current_position, direction, -5, 1, color))
             ||
             (new_position_color(current_position, direction+4, -2) === color &&
             new_position_color(current_position, direction+4, -3) === color &&
             new_position_color(current_position, direction+4, -4) === color &&
             new_position_color(current_position, direction+4, -1) === color_none && 
-            is_bound_available(current_position, direction+4, -5, 1, color))
+            is_unbound_available(current_position, direction+4, -5, 1, color))
         ){
             value += 745;
             continue;
         }
 
         // 活二（12） 001100
-        // 活二 001*00 125
+        // 活二 001*00 125  / ?__1*__?
         if((new_position_color(current_position, direction, -1) === color &&
             new_position_color(current_position, direction, -2) === color_none &&
             new_position_color(current_position, direction, -3) === color_none &&
@@ -515,7 +515,7 @@ export default function evaluate(current_position, color, caroBoard){
 
         // 偏二
         // 偏二 （12.5） 000110
-        // 000*10
+        // 000*10 / ?___1*_?
         if((new_position_color(current_position, direction, 1) === color &&
             new_position_color(current_position, direction, 2) === color_none &&
             new_position_color(current_position, direction, -3) === color_none &&
@@ -532,7 +532,7 @@ export default function evaluate(current_position, color, caroBoard){
             continue;
         }
 
-        // 0001*0
+        // 0001*0 / ?___1*_?
         if((new_position_color(current_position, direction, -1) === color &&
             new_position_color(current_position, direction, -4) === color_none &&
             new_position_color(current_position, direction, -3) === color_none &&
@@ -550,206 +550,232 @@ export default function evaluate(current_position, color, caroBoard){
         }
 
         // 死三 （17） 11100
-        // 11*00
+        // 11*00 / ?11*__?
         if((new_position_color(current_position, direction, -1) === color &&
             new_position_color(current_position, direction, -2) === color &&
             new_position_color(current_position, direction, 2) === color_none &&
-            new_position_color(current_position, direction, 1) === color_none)
+            new_position_color(current_position, direction, 1) === color_none &&
+            is_unbound_available(current_position, direction, -3, 3, color))
             ||
             (new_position_color(current_position, direction+4, -1) === color &&
             new_position_color(current_position, direction+4, -2) === color &&
             new_position_color(current_position, direction+4, 2) === color_none &&
-            new_position_color(current_position, direction+4, 1) === color_none)
+            new_position_color(current_position, direction+4, 1) === color_none &&
+            is_unbound_available(current_position, direction+4, -3, 3, color))
         ){
             value += 120;
             continue;
         }
 
-        // 1*100
+        // 1*100 / ?1*1__?
         if((new_position_color(current_position, direction, -1) === color &&
             new_position_color(current_position, direction, 1) === color &&
             new_position_color(current_position, direction, 2) === color_none &&
-            new_position_color(current_position, direction, 3) === color_none)
+            new_position_color(current_position, direction, 3) === color_none &&
+            is_unbound_available(current_position, direction, -2, 4, color))
             ||
             (new_position_color(current_position, direction+4, -1) === color &&
             new_position_color(current_position, direction+4, 1) === color &&
             new_position_color(current_position, direction+4, 2) === color_none &&
-            new_position_color(current_position, direction+4, 3) === color_none)
+            new_position_color(current_position, direction+4, 3) === color_none &&
+            is_unbound_available(current_position, direction+4, -2, 4, color))
         ){
             value += 120;
             continue;
         }
 
-        // *1100
+        // *1100 / ?*11__?
         if((new_position_color(current_position, direction, 1) === color &&
             new_position_color(current_position, direction, 2) === color &&
             new_position_color(current_position, direction, 3) === color_none &&
-            new_position_color(current_position, direction, 4) === color_none)
+            new_position_color(current_position, direction, 4) === color_none &&
+            is_unbound_available(current_position, direction, -1, 5, color))
             ||
             (new_position_color(current_position, direction+4, 1) === color &&
             new_position_color(current_position, direction+4, 2) === color &&
             new_position_color(current_position, direction+4, 3) === color_none &&
-            new_position_color(current_position, direction+4, 4) === color_none)
+            new_position_color(current_position, direction+4, 4) === color_none &&
+            is_unbound_available(current_position, direction+4, -1, 5, color))
         ){
             value += 120;
             continue;
         }
 
         // 死三 （18） 10110
-        // 101*0
+        // 101*0 / ?1_1*_?
         if((new_position_color(current_position, direction, -1) === color &&
             new_position_color(current_position, direction, -3) === color &&
             new_position_color(current_position, direction, -2) === color_none &&
-            new_position_color(current_position, direction, 1) === color_none)
+            new_position_color(current_position, direction, 1) === color_none &&
+            is_unbound_available(current_position, direction, -4, 2, color))
             ||
             (new_position_color(current_position, direction+4, -1) === color &&
             new_position_color(current_position, direction+4, -3) === color &&
             new_position_color(current_position, direction+4, -2) === color_none &&
-            new_position_color(current_position, direction+4, 1) === color_none)
+            new_position_color(current_position, direction+4, 1) === color_none &&
+            is_unbound_available(current_position, direction+4, -4, 2, color))
         ){
             value += 120;
             continue;
         }
 
-        // *0110
+        // *0110 / ?*_11_?
         if((new_position_color(current_position, direction, 2) === color &&
             new_position_color(current_position, direction, 3) === color &&
             new_position_color(current_position, direction, 4) === color_none &&
-            new_position_color(current_position, direction, 1) === color_none)
+            new_position_color(current_position, direction, 1) === color_none &&
+            is_unbound_available(current_position, direction, -1, 5, color))
             ||
             (new_position_color(current_position, direction+4, 2) === color &&
             new_position_color(current_position, direction+4, 3) === color &&
             new_position_color(current_position, direction+4, 4) === color_none &&
-            new_position_color(current_position, direction+4, 1) === color_none)
+            new_position_color(current_position, direction+4, 1) === color_none &&
+            is_unbound_available(current_position, direction+4, -1, 5, color))
         ){
             value += 120;
             continue;
         }
 
-        // 10*10
+        // 10*10 / ?1_*1_?
         if((new_position_color(current_position, direction, -2) === color &&
             new_position_color(current_position, direction, 1) === color &&
             new_position_color(current_position, direction, -1) === color_none &&
-            new_position_color(current_position, direction, 2) === color_none)
+            new_position_color(current_position, direction, 2) === color_none &&
+            is_unbound_available(current_position, direction, -3, 3, color))
             ||
             (new_position_color(current_position, direction+4, -2) === color &&
             new_position_color(current_position, direction+4, 1) === color &&
             new_position_color(current_position, direction+4, -1) === color_none &&
-            new_position_color(current_position, direction+4, 2) === color_none)
+            new_position_color(current_position, direction+4, 2) === color_none &&
+            is_unbound_available(current_position, direction+4, -3, 3, color))
         ){
             value += 120;
             continue;
         }
 
         // 死三 （19） 10101
-        // *0101
+        // *0101 / ?*_1_1?
         if((new_position_color(current_position, direction, 2) === color &&
             new_position_color(current_position, direction, 4) === color &&
             new_position_color(current_position, direction, 1) === color_none &&
-            new_position_color(current_position, direction, 3) === color_none)
+            new_position_color(current_position, direction, 3) === color_none &&
+            is_unbound_available(current_position, direction, -1, 5, color))
             ||
             (new_position_color(current_position, direction+4, 2) === color &&
             new_position_color(current_position, direction+4, 4) === color &&
             new_position_color(current_position, direction+4, 1) === color_none &&
-            new_position_color(current_position, direction+4, 3) === color_none)
+            new_position_color(current_position, direction+4, 3) === color_none &&
+            is_unbound_available(current_position, direction+4, -1, 5, color))
         ){
             value += 120;
             continue;
         }
 
-        // 10*01
+        // 10*01 / ?1_*_1?
         if((new_position_color(current_position, direction, 2) === color &&
             new_position_color(current_position, direction, -2) === color &&
             new_position_color(current_position, direction, 1) === color_none &&
-            new_position_color(current_position, direction, -1) === color_none)
+            new_position_color(current_position, direction, -1) === color_none &&
+            is_unbound_available(current_position, direction, -3, 3, color))
             ||
             (new_position_color(current_position, direction+4, 2) === color &&
             new_position_color(current_position, direction+4, -2) === color &&
             new_position_color(current_position, direction+4, 1) === color_none &&
-            new_position_color(current_position, direction+4, -1) === color_none)
+            new_position_color(current_position, direction+4, -1) === color_none &&
+            is_unbound_available(current_position, direction+4, -3, 3, color))
         ){
             value += 120;
             continue;
         }
 
         // 死三（20） 01110
-        // 0*110
+        // 0*110 / ?_*11_?
         if((new_position_color(current_position, direction, 1) === color &&
             new_position_color(current_position, direction, 2) === color &&
             new_position_color(current_position, direction, -1) === color_none &&
-            new_position_color(current_position, direction, 3) === color_none)
+            new_position_color(current_position, direction, 3) === color_none &&
+            is_unbound_available(current_position, direction, -2, 4, color))
             ||
             (new_position_color(current_position, direction+4, 1) === color &&
             new_position_color(current_position, direction+4, 2) === color &&
             new_position_color(current_position, direction+4, -1) === color_none &&
-            new_position_color(current_position, direction+4, 3) === color_none)
+            new_position_color(current_position, direction+4, 3) === color_none &&
+            is_unbound_available(current_position, direction+4, -2, 4, color))
         ){
             value += 120;
             continue;
         }
 
-        // 01*10
+        // 01*10 / ?_1*1_?
         if((new_position_color(current_position, direction, -1) === color &&
             new_position_color(current_position, direction, 1) === color &&
             new_position_color(current_position, direction, -2) === color_none &&
-            new_position_color(current_position, direction, 2) === color_none)
+            new_position_color(current_position, direction, 2) === color_none &&
+            is_unbound_available(current_position, direction, -3, 3, color))
             ||
             (new_position_color(current_position, direction+4, -1) === color &&
             new_position_color(current_position, direction+4, 1) === color &&
             new_position_color(current_position, direction+4, -2) === color_none &&
-            new_position_color(current_position, direction+4, 2) === color_none)
+            new_position_color(current_position, direction+4, 2) === color_none &&
+            is_unbound_available(current_position, direction+4, -3, 3, color))
         ){
             value += 120;
             continue;
         }
 
         // 死三（21） 11010
-        // *1010
+        // *1010 / ?*1_1_?
         if((new_position_color(current_position, direction, 1) === color &&
             new_position_color(current_position, direction, 3) === color &&
             new_position_color(current_position, direction, 2) === color_none &&
-            new_position_color(current_position, direction, 4) === color_none)
+            new_position_color(current_position, direction, 4) === color_none &&
+            is_unbound_available(current_position, direction, -1, 5, color))
             ||
             (new_position_color(current_position, direction+4, 1) === color &&
             new_position_color(current_position, direction+4, 3) === color &&
             new_position_color(current_position, direction+4, 2) === color_none &&
-            new_position_color(current_position, direction+4, 4) === color_none)
+            new_position_color(current_position, direction+4, 4) === color_none &&
+            is_unbound_available(current_position, direction+4, -1, 5, color))
         ){
             value += 120;
             continue;
         }
 
-        // 1*010
+        // 1*010 / ?1*_1_?
         if((new_position_color(current_position, direction, -1) === color &&
             new_position_color(current_position, direction, 2) === color &&
             new_position_color(current_position, direction, 1) === color_none &&
-            new_position_color(current_position, direction, 3) === color_none)
+            new_position_color(current_position, direction, 3) === color_none &&
+            is_unbound_available(current_position, direction, -2, 4, color))
             ||
             (new_position_color(current_position, direction+4, -1) === color &&
             new_position_color(current_position, direction+4, 2) === color &&
             new_position_color(current_position, direction+4, 1) === color_none &&
-            new_position_color(current_position, direction+4, 3) === color_none)
+            new_position_color(current_position, direction+4, 3) === color_none &&
+            is_unbound_available(current_position, direction+4, -2, 4, color))
         ){
             value += 120;
             continue;
         }
 
-        // 110*0
+        // 110*0 / ?11_*_?
         if((new_position_color(current_position, direction, -2) === color &&
             new_position_color(current_position, direction, -3) === color &&
             new_position_color(current_position, direction, -1) === color_none &&
-            new_position_color(current_position, direction, 1) === color_none)
+            new_position_color(current_position, direction, 1) === color_none &&
+            is_unbound_available(current_position, direction, -4, 2, color))
             ||
             (new_position_color(current_position, direction+4, -2) === color &&
             new_position_color(current_position, direction+4, -3) === color &&
             new_position_color(current_position, direction+4, -1) === color_none &&
-            new_position_color(current_position, direction+4, 1) === color_none)
+            new_position_color(current_position, direction+4, 1) === color_none &&
+            is_unbound_available(current_position, direction+4, -4, 2, color))
         ){
             value += 120;
         }
 
         // 隔二 （13）and (14) 001010
-        // 隔二 0010*0
+        // 隔二 0010*0 / 6 spaces, dont check bound
         if((new_position_color(current_position, direction, -2) === color &&
             new_position_color(current_position, direction, -1) === color_none &&
             new_position_color(current_position, direction, -3) === color_none &&
