@@ -84,6 +84,7 @@ currentMode = initCaroBoard(PlayingMode.Unknown)
 
 // update Caro Board state
 function updateCaroBoard(row, column, gridCaroCell) {
+    // put Caro Value into the board
     if (isCaroX) {
         theCaroBoard.putCaroValue(Global.CARO_X, row, column)
         gridCaroCell.innerHTML = Global.CaroXSpan
@@ -99,6 +100,7 @@ function updateCaroBoard(row, column, gridCaroCell) {
         lblPlayerO.classList.remove('inturn-o')
     }
 
+    // remove newest css, after BASE_TIMEOUT ms
     setTimeout( () => {
         const img = $("img.newest")
         if (img) {
@@ -108,6 +110,8 @@ function updateCaroBoard(row, column, gridCaroCell) {
         isPlayer2Playing = false
     }, BASE_TIMEOUT)
 
+    
+    // check Won and make the PC playing
     setTimeout( () => {
         //let checkWhoWon = checkWonInRange(row, column)
         let checkWhoWon = theCaroBoard.checkWonInRange(row, column)
@@ -121,7 +125,7 @@ function updateCaroBoard(row, column, gridCaroCell) {
                 console.log(msg)
                 if (currentMode === PlayingMode.PCvsPC) {
                     // restart autoplay again
-                    startPCvsPCMode()
+                    startPCvsPCMode(true)
                 }
             }, 3000)
         }
@@ -137,7 +141,7 @@ function updateCaroBoard(row, column, gridCaroCell) {
                 theCaroBoard.checkWonInRange(0, 0, Global.MAX_ROWS, Global.MAX_COLUMNS)
                 setTimeout(() => { 
                     // restart autoplay again
-                    startPCvsPCMode()
+                    startPCvsPCMode(true)
                 }, 3000)                
             }
         }
@@ -230,7 +234,8 @@ btnPCvsPC.onclick = function(e) {
         lblPlayerX.innerText = "Player X: Computer"
         lblPlayerO.innerText = "Player O: Computer"
         
-        startPCvsPCMode()
+        let continueGame = currentMode === PlayingMode.PCvsHuman || currentMode === PlayingMode.HumanvsPC || currentMode === PlayingMode.HumanvsHuman
+        startPCvsPCMode(!continueGame)
 
         currentMode = PlayingMode.PCvsPC
     }
@@ -288,11 +293,14 @@ btnRestart.onclick = function(e) {
     currentMode = initCaroBoard(PlayingMode.Unknown)
 }
 
-function startPCvsPCMode()
+function startPCvsPCMode(newGame = true)
 {
-    currentMode = initCaroBoard(PlayingMode.PCvsPC)
+    if (newGame) {
+        initCaroBoard(PlayingMode.PCvsPC)
+        isCaroX = true
+    }
 
-    isCaroX = true
+    currentMode = PlayingMode.PCvsPC
 
     let ai_position = AI_position()
     if (ai_position) {

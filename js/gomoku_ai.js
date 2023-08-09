@@ -799,9 +799,6 @@ export default function evaluate(current_position, color, caroBoard){
             value += 1;
             continue;
         }
-
-
-
     }
     return value;
 }
