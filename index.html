@@ -20,14 +20,8 @@
             <p class="browsehappy">You are using an <strong>outdated</strong> browser. Please <a href="#">upgrade your browser</a> to improve your experience.</p>
         <![endif]-->
         <div class="root">
-            <h3>Gomoku board</h3>
-
-            <div class="grid-caro">
-                <div class="grid-column-headers">
-                    <div class="grid-column-header">1</div>
-                    <div class="grid-column-header">2</div>
-                    <div class="grid-column-header">3</div>  
-                </div>
+            <!-- <h3>Gomoku board</h3> -->
+            <div class="grid-caro no-select">
                 <div class="grid-caro-container">
                     <div class="grid-caro-cell">1</div>
                     <div class="grid-caro-cell">2</div>
@@ -41,16 +35,23 @@
                         <span class="middle-item"><img class="caro-cell" src="./img/o.png" alt="o"></span>
                     </div>
                 </div>
+                <div class="grid-column-headers">
+                    <div class="grid-column-header">1</div>
+                    <div class="grid-column-header">2</div>
+                    <div class="grid-column-header">3</div>  
+                </div>
                 <div class="grid-controllers">
-                    <input class="controller" type="button" id="btn-pc-vs-pc" value="Computer vs. Computer">
+                    <input class="controller" type="button" id="btn-pc-vs-pc" value="PC vs. PC">
                     <div class="space"></div>
-                    <input class="controller" type="button" id="btn-human-vs-pc" value="Human (X) vs. Computer">
+                    <input class="controller" type="button" id="btn-human-vs-pc" value="Human (X) vs. PC">
                     <div class="space"></div>
-                    <input class="controller" type="button" id="btn-pc-vs-human" value="Computer (X) vs. Human">
+                    <input class="controller" type="button" id="btn-pc-vs-human" value="PC (X) vs. Human">
                     <div class="space"></div>
-                    <input class="controller" type="button" id="btn-human-vs-human" value="Human (X) vs. Human (O)">
+                    <input class="controller" type="button" id="btn-human-vs-human" value="Human (X) vs. Human">
                     <div class="space"></div>
                     <input class="controller" type="button" id="btn-restart" value="Restart game">
+                    <div class="space"></div>
+                    <input class="controller" type="button" id="btn-toggle-fullscreen" value="Toggle Fullscreen">
                     <div class="space"></div>
                     <div class="label inturn" id="playerX">Player X: Unknown</div>
                     <div class="space2"></div>

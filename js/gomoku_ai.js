@@ -2,8 +2,6 @@ import * as Global from './global.js'
 
 let chessBoard = []
 const board_boundary = 11;
-let human_color = Global.CARO_X;
-let AI_color = Global.CARO_O;
 const color_none = Global.EMPTY_CARO_VALUE
 
 
@@ -63,67 +61,15 @@ function is_unbound_available(current_position, direction, left_bound, right_bou
         (new_position_color(current_position, direction, left_bound) !== color && new_position_color(current_position, direction, right_bound) === color_none) ;
 }
 
-export default function evaluate(current_position, color, caroBoard){
+export default function evaluate(current_position, color, player_color, opponent_color, caroBoard){
     chessBoard = caroBoard
     var value = 0;
 
-    if(color === human_color){
+    if(color === opponent_color){
         value = value - 233;
     }
 
     for(var direction = 0; direction<4; direction++) {
-        /*
-        // ----------(1) 连五 11111 5000000分
-        // 连五 ?1111[1]?
-        if((new_position_color(current_position, direction, -1) === color &&
-            new_position_color(current_position, direction, -2) === color &&
-            new_position_color(current_position, direction, -3) === color &&
-            new_position_color(current_position, direction, -4) === color &&
-            position_color(current_position) === color &&
-            is_unbound_available(current_position, direction, -5, 1, color))
-        ){            
-            console.log('?1111[1]?')
-
-            if(color === AI_color){
-                value += 55555555;
-            }
-            break;
-        }
-
-        // 连五 ?111[1]1?
-        if((new_position_color(current_position, direction, -1) === color &&
-            new_position_color(current_position, direction, -2) === color &&
-            new_position_color(current_position, direction, -3) === color &&
-            position_color(current_position) === color &&
-            new_position_color(current_position, direction, 1) === color &&
-            is_unbound_available(current_position, direction, -4, 2, color))
-        ){            
-            console.log('?111[1]1?')
-
-            if(color === AI_color){
-                value += 55555555;
-            }
-            break;
-        }
-        
-        // 连五 ?11[1]11?
-        if((new_position_color(current_position, direction, -1) === color &&
-            new_position_color(current_position, direction, -2) === color &&
-            position_color(current_position) === color &&
-            new_position_color(current_position, direction, 1) === color &&
-            new_position_color(current_position, direction, -2) === color &&
-            is_unbound_available(current_position, direction, -3, 3, color))
-        ){            
-            console.log('?11[1]11?')
-
-            if(color === AI_color){
-                value += 55555555;
-            }
-            break;
-        }
-        */
-
-
         // ----------(1) 连五 11111 50000分
         // 连五 1111* / ?1111*?
         if((new_position_color(current_position, direction, -1) === color &&
@@ -138,7 +84,7 @@ export default function evaluate(current_position, color, caroBoard){
             new_position_color(current_position, direction+4, -4) === color &&
             is_unbound_available(current_position, direction+4, -5, 1, color))
         ){            
-            if(color === AI_color){
+            if(color === player_color){
                 value += 500000;
             }
             value += 50000;
@@ -157,7 +103,7 @@ export default function evaluate(current_position, color, caroBoard){
             new_position_color(current_position, direction+4, 1) === color && 
             is_unbound_available(current_position, direction+4, -4, 2, color))
         ){
-            if(color === AI_color){
+            if(color === player_color){
                 value += 500000;
             }
             value += 50000;
@@ -170,7 +116,7 @@ export default function evaluate(current_position, color, caroBoard){
             new_position_color(current_position, direction, 2) === color && 
             is_unbound_available(current_position, direction, -3, 3, color)
         ){
-            if(color === AI_color){
+            if(color === player_color){
                 value += 500000;
             }
             value += 50000;
@@ -192,7 +138,7 @@ export default function evaluate(current_position, color, caroBoard){
             new_position_color(current_position, direction+4, 1) === color_none)
         ){
             value += 4320;
-            if(color === AI_color){
+            if(color === player_color){
                 value += 10000;
             }
             continue;
@@ -210,7 +156,7 @@ export default function evaluate(current_position, color, caroBoard){
             new_position_color(current_position, direction+4, -3) === color_none &&
             new_position_color(current_position, direction+4, 2) === color_none)
         ){
-            if(color === AI_color){
+            if(color === player_color){
                 value += 10000;
             }
             value += 4320;

@@ -6,7 +6,9 @@ import CaroBoard from './board.js'
 
 const theCaroBoard = CaroBoard()
 
-const BASE_TIMEOUT = 200
+const BASE_TIMEOUT = 300
+const RESTART_TIMEOUT = 5000
+
 const $ = document.querySelector.bind(document)
 const $$ = document.querySelectorAll.bind(document)
 
@@ -25,6 +27,7 @@ var isPlayer2Playing = false
 var isPCTurn = false
 var currentMode = PlayingMode.Unknown;
 var isEndGame = false
+var timerPCPlaying
 
 function initCaroBoard(playMode) {
     if (playMode === PlayingMode.Unknown)
@@ -36,6 +39,8 @@ function initCaroBoard(playMode) {
 
     gridCaroContainer.innerHTML = buildCaroGrid(Global.MAX_ROWS, Global.MAX_COLUMNS)
     theCaroBoard.initBoard()
+    if (timerPCPlaying)
+        clearTimeout(timerPCPlaying)
 
     isCaroX = true
 
@@ -49,11 +54,11 @@ function initCaroBoard(playMode) {
 }
 
 function getPlayers(isPlayerX) {
-    let player = CARO_X
-    let opponent = CARO_O
+    let player = Global.CARO_X
+    let opponent = Global.CARO_O
     if (!isPlayerX) {
-        player = CARO_O
-        opponent = CARO_X
+        player = Global.CARO_O
+        opponent = Global.CARO_X
     }
 
     return {
@@ -70,6 +75,7 @@ const btnHumanvsPC = $("#btn-human-vs-pc")
 const btnPCvsHuman = $("#btn-pc-vs-human")
 const btnHumanvsHuman = $("#btn-human-vs-human")
 const btnRestart = $("#btn-restart")
+const btnToggleFullscreen = $("#btn-toggle-fullscreen")
 const lblPlayerX = $("#playerX")
 const lblPlayerO = $("#playerO")
 
@@ -112,7 +118,7 @@ function updateCaroBoard(row, column, gridCaroCell) {
 
     
     // check Won and make the PC playing
-    setTimeout( () => {
+    timerPCPlaying = setTimeout( () => {
         //let checkWhoWon = checkWonInRange(row, column)
         let checkWhoWon = theCaroBoard.checkWonInRange(row, column)
         if (checkWhoWon) {
@@ -127,7 +133,7 @@ function updateCaroBoard(row, column, gridCaroCell) {
                     // restart autoplay again
                     startPCvsPCMode(true)
                 }
-            }, 3000)
+            }, RESTART_TIMEOUT)
         }
         else if (currentMode === PlayingMode.PCvsPC) {
             let ai_position = AI_position()
@@ -142,7 +148,7 @@ function updateCaroBoard(row, column, gridCaroCell) {
                 setTimeout(() => { 
                     // restart autoplay again
                     startPCvsPCMode(true)
-                }, 3000)                
+                }, RESTART_TIMEOUT)                
             }
         }
         else if (currentMode === PlayingMode.HumanvsPC && isPCTurn) {
@@ -272,6 +278,8 @@ btnHumanvsHuman.onclick = function(e) {
     btnHumanvsHuman.classList.add('active')
     lblPlayerX.innerText = "Player X: Human"
     lblPlayerO.innerText = "Player O: Human"
+    if (timerPCPlaying)
+        clearTimeout(timerPCPlaying)
 
     isPCTurn = false
     if (!isPlayer1Playing && !isPlayer2Playing) {
@@ -289,8 +297,38 @@ btnRestart.onclick = function(e) {
     lblPlayerO.innerText = "Player O: Unknown"
 
     isPCTurn = false
+    if (timerPCPlaying)
+        clearTimeout(timerPCPlaying)
 
     currentMode = initCaroBoard(PlayingMode.Unknown)
+}
+
+
+btnToggleFullscreen.onclick = function(e) {
+    let fullscreenElement = document.fullscreenElement
+    if (!fullscreenElement) {
+        fullscreenElement = document.documentElement
+        if (fullscreenElement.requestFullscreen) {
+            fullscreenElement.requestFullscreen()
+        } 
+        else if (fullscreenElement.webkitRequestFullscreen) { /* Safari */
+            fullscreenElement.webkitRequestFullscreen()
+        } 
+        else if (fullscreenElement.msRequestFullscreen) { /* IE11 */
+            fullscreenElement.msRequestFullscreen()
+        }    
+    }
+    else {
+        if (document.exitFullscreen) {
+            document.exitFullscreen()
+        } 
+        else if (document.webkitExitFullscreen) { /* Safari */
+            document.webkitExitFullscreen()
+        } 
+        else if (document.msExitFullscreen) { /* IE11 */
+            document.msExitFullscreen()
+        }        
+    }
 }
 
 function startPCvsPCMode(newGame = true)
@@ -325,19 +363,20 @@ function startHumanvsPCMode(initBoard = true)
 }
 
 
-function AI_position() {
+function AI_position(playerColor, opponentColor) {
     let color_none = Global.EMPTY_CARO_VALUE;
 
-    // true 代表黑棋，false 代表白棋。
-    let human_color = Global.CARO_X;
-    let AI_color = Global.CARO_O;
+    
+    let players = getPlayers(isCaroX)
+    opponentColor = players.opponent;
+    playerColor = players.player;
     
     let max_value = 0;
     let current_value = 0;
     let max_position = null;
     let current_position = [0, 0];
-    let current_value_AI_color = 0;
-    let current_value_non_AI_color = 0;
+    let current_value_player_color = 0;
+    let current_value_opponent_color = 0;
     let chessBoard = theCaroBoard.getBoard()
 
     let firstMove = theCaroBoard.getFirstMove()
@@ -347,7 +386,7 @@ function AI_position() {
     if (firstMove && !secondMove) {
         // calculate the secondMove Value
         for (let i = -1; i <= 1 ; i++) {
-            for (let j = -1; j <= 1 ; j++) {
+            for (let j = -1; j <= 1 ; j++) { // (i !== 0 && j !== 0) because the 2nd moving should in the 4 corner (diagonal)
                 if ((i !== 0 || j !== 0) && (firstMove.row + i >= 0 && firstMove.row + i < Global.MAX_ROWS && firstMove.column + j >= 0 && firstMove.column + j < Global.MAX_COLUMNS))  {
                     availablePositions.push({row: firstMove.row + i, column: firstMove.column + j})
                 }
@@ -369,16 +408,84 @@ function AI_position() {
     }
 
     availablePositions = []
-    for (var row = 0; row < Global.MAX_ROWS; row++) {
-        for (var col = 0; col < Global.MAX_COLUMNS; col++) {
+    for (let row = 0; row < Global.MAX_ROWS; row++) {
+        for (let col = 0; col < Global.MAX_COLUMNS; col++) {
             if (chessBoard[row][col] === color_none) {
                 current_position = [row, col];
-                current_value_AI_color = evaluate(current_position, AI_color, chessBoard);
-                current_value_non_AI_color = evaluate(current_position, human_color, chessBoard);
-                if (current_value_non_AI_color < 0) {
-                    current_value_non_AI_color = 0;
+                current_value_player_color = evaluate(current_position, playerColor, playerColor, opponentColor, chessBoard);
+                current_value_opponent_color = evaluate(current_position, opponentColor, playerColor, opponentColor, chessBoard); // OR ??? current_value_opponent_color = evaluate(current_position, playerColor, opponentColor, playerColor, chessBoard);
+                
+                if (current_value_opponent_color < 0) {
+                    current_value_opponent_color = 0;
                 }
-                current_value = current_value_AI_color + current_value_non_AI_color;
+                current_value = current_value_player_color + current_value_opponent_color;
+                if (current_value > max_value) {
+                    //console.log('AI_position. current_value:', current_value, '. max_value:', max_value)
+                    max_value = current_value;
+                    max_position = current_position;
+                    availablePositions.length = 0
+                    availablePositions.push(max_position)
+                }
+                else if (current_value === max_value) {
+                    availablePositions.push(current_position)
+                }
+            }
+        }
+    }
+    
+    if (availablePositions && availablePositions.length >= 2 && max_value > 0) {
+        console.log('AI max_value:', max_value, '; available positions:', availablePositions)
+        
+        console.log('AI_position ---, chessBoard:', chessBoard)
+        for (let i = 0; i < availablePositions.length; i++) {
+            let tempBoard = theCaroBoard.getCopyBoard()
+            getMaxMinPosition(availablePositions[i], playerColor, opponentColor, tempBoard, 2)
+        }
+
+        let randomIndex = Math.floor(Math.random() * availablePositions.length);
+        max_position = availablePositions[randomIndex]
+        console.log('AI random index:', randomIndex, '; selected position:', max_position)
+    }
+    else if (max_value >= 2000) {
+        console.log('AI max_value:', max_value, '; position:', max_position)
+    }
+    return max_position;
+}
+
+function getMaxMinPosition(current_position, playerColor, opponentColor, chessBoard, deepLevel) {
+    chessBoard[current_position[0]][current_position[1]] = playerColor
+
+    console.log('getMaxMinPosition ---, current_position:', current_position, ', deepLevel:', deepLevel)
+    //console.log('getMaxMinPosition ---, chessBoard:', chessBoard)
+    console.log('getMaxMinPosition ---, playerColor:', playerColor, ', opponentColor:', opponentColor)
+
+    let max_position = null;
+
+    /*
+    let color_none = Global.EMPTY_CARO_VALUE;
+
+    // true 代表黑棋，false 代表白棋。
+    let human_color = opponentColor;
+    let AI_color = playerColor;
+    
+    let max_value = 0;
+    let current_value = 0;
+    let current_position = [0, 0];
+    let current_value_player_color = 0;
+    let current_value_opponent_color = 0;
+    let availablePositions = [];
+
+    availablePositions = []
+    for (let row = 0; row < Global.MAX_ROWS; row++) {
+        for (let col = 0; col < Global.MAX_COLUMNS; col++) {
+            if (chessBoard[row][col] === color_none) {
+                current_position = [row, col];
+                current_value_player_color = evaluate(current_position, AI_color, chessBoard);
+                current_value_opponent_color = evaluate(current_position, human_color, chessBoard);
+                if (current_value_opponent_color < 0) {
+                    current_value_opponent_color = 0;
+                }
+                current_value = current_value_player_color + current_value_opponent_color;
                 if (current_value > max_value) {
                     //console.log('AI_position. current_value:', current_value, '. max_value:', max_value)
                     max_value = current_value;
@@ -402,7 +509,8 @@ function AI_position() {
     else if (max_value >= 2000) {
         console.log('AI max_value:', max_value, '; position:', max_position)
     }
-    return max_position;
+    */
+    return max_position;    
 }
 
 // todo

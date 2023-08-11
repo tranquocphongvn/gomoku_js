@@ -1,7 +1,9 @@
 :root {
-    --cell-width-height: 35px;
-    --grid-columns: 30;
+    --grid-columns: 35;
     --grid-rows: 25;
+    --cell-width-height: 30px;
+
+    --grid-row-headers-top: 8px;
     --grid-width: calc(var(--grid-columns) * var(--cell-width-height));
 }
 
@@ -9,8 +11,14 @@
     font-family: 'Roboto', sans-serif;
 }
 
-.body {
-    width: 1900px;
+.no-select {
+    -webkit-touch-callout: none; /* iOS Safari */
+    -webkit-user-select: none; /* Safari */
+    -khtml-user-select: none; /* Konqueror HTML */
+    -moz-user-select: none; /* Firefox */
+    -ms-user-select: none; /* Internet Explorer/Edge */
+    user-select: none; /* Non-prefixed version, currently
+                        supported by Chrome and Opera */
 }
 
 .grid-caro .grid-column-headers {
@@ -27,7 +35,7 @@
 }
 
 .grid-caro {
-    left: 25px;
+    left: 20px;
     position: relative;
     align-content: center;
     text-align: center;
@@ -41,7 +49,7 @@
     padding-left: 3px;
     text-align: center;
     color: blue;
-    font-size: 16px;
+    font-size: 0.8em;
 }
 
 .grid-row-headers {
@@ -54,7 +62,8 @@
     width: 20px;
     height: 20px;
     position: absolute;
-    top:80px;
+    top: var(--grid-row-headers-top);
+    left: 5px;
 }
 
 .grid-row-header {
@@ -62,7 +71,7 @@
     background-color: #fff;
     margin: 1px;
     padding: 1px;
-    font-size: 14px;
+    font-size: 0.8em;
     height: 100%;
     text-align: center;
     color: blue;
@@ -71,11 +80,11 @@
 }
 
 .grid-controllers {
-    top: 20px;
+    top: var(--cell-width-height);
     left: var(--grid-width);
     display: grid;
-    margin-left: 20px;
-    padding: 5px;
+    margin-left: 10px;
+    padding: 0 5px;
     position: absolute;
 }
 
@@ -83,6 +92,7 @@
     height: 25px;
     border: 1px solid #000;
     font-weight: 1000;
+    font-size: 0.9em;
 }
 
 .controller.active {
@@ -99,26 +109,26 @@
 
 .label {
     text-align: left;
-    font-size: 16px;
+    font-size: 1em;
     font-weight: 600;
     color: #aaa;
 }
 
 .label2 {
     text-align: center;
-    font-size: 14px;
+    font-size: 1em;
     font-weight: 800;
     color: black;
 }
 
 .inturn-x {
     color: blue;
-    font-weight: 1000;
+    font-weight: 1500;
 }
 
 .inturn-o {
     color: red;
-    font-weight: 1000;
+    font-weight: 1500;
 }
 .grid-caro-container {
     display: grid;
@@ -136,9 +146,10 @@
 }
 
 .grid-caro-cell {
-    background-color: #fff;
-    border: 1px solid #666;
+    background-color: #f5f5f5;
+    border: 0px  solid #666;
     margin: 0;
+    padding: 0;
     text-align: center;
     display: table;
 }
@@ -151,15 +162,20 @@
     background-color: rgba(0, 255, 255, 0.8)
 }
 
+.grid-caro-cell.won:hover {
+    background-color: rgba(0, 255, 255, 0.8)
+}
+
 .grid-caro-cell:hover {
     background-color:  rgba(255, 255, 0, 0.3)
 }
 
 img.caro-cell {
+    top: 0;
     margin: 0;
-    padding: 2px;
-    width: calc(var(--cell-width-height) - 11px);
-    height: calc(var(--cell-width-height) - 11px);
+    padding: 1px;
+    width: calc(var(--cell-width-height) - 10px);
+    height: calc(var(--cell-width-height) - 10px);
     vertical-align: middle;
     align-content: center;
 }
