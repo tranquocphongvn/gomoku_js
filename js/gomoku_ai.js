@@ -5,7 +5,11 @@ const board_boundary = 11;
 const color_none = Global.EMPTY_CARO_VALUE
 
 
-// 相对于position的new_position中direction代表方向，distance代表距离。
+function logger(...log) {
+    console.log(...log)
+}
+
+// The <new_position> relative to the <position>, <direction> and the <distance>
 // x: row; y: column
 function new_position_color(position, direction, distance){
     let position_x = position[0];
@@ -39,180 +43,327 @@ function new_position_color(position, direction, distance){
     return chessBoard[position_x][position_y];
 }
 
-function position_color(position) {
-    let position_x = position[0];
-    let position_y = position[1];
-
-    console.log('chessBoard: ', chessBoard);
-    let color = chessBoard[position_x][position_y];
-    console.log('position:', position, ', position_x:', position_x, ', position_y:', position_y, ', color:', color)
-    return color;
-}
-
-// the un-boundary is available, it means not bound by opponent, or myself
+// the un-boundary is available, it means not bound by opponent, or itself (check_over_6 = true)
+// unbound_value object {left, right}
 // dont apply for small value <= 200
-function is_unbound_available(current_position, direction, left_bound, right_bound, color) {
-    /*
-    return (new_position_color(current_position, direction, -5) === color_none) ||
-        (new_position_color(current_position, direction, +1) === color_none);
-    */
-    
-    return (new_position_color(current_position, direction, left_bound) === color_none && new_position_color(current_position, direction, right_bound) !== color) ||
-        (new_position_color(current_position, direction, left_bound) !== color && new_position_color(current_position, direction, right_bound) === color_none) ;
+// return:
+// 0: left and right bound (unavailable)
+// 1: left/right bound only (unbound available)
+// 2: no bound (unbound available)
+function check_unbound_available(current_position, direction, left_bound, right_bound, color, unbound_value, check_at = '', check_over_6 = false) {
+    if (check_over_6) {
+        let left_value = (new_position_color(current_position, direction, left_bound) === color_none && new_position_color(current_position, direction, right_bound) !== color)
+        let right_value = (new_position_color(current_position, direction, left_bound) !== color && new_position_color(current_position, direction, right_bound) === color_none)
+        
+        //logger('check_unbound_available. check_at:', check_at, ', current_position:', current_position, ', direction:', direction, ', left_bound:', left_bound, ', right_bound:', right_bound, ', color:', color, ', left_value:', left_value, ', right_value:', right_value, ', check_over_6:', check_over_6)
+
+        if (unbound_value) {
+            unbound_value.left = left_value + 0;
+            unbound_value.right = right_value + 0;
+            unbound_value.total = (left_value + right_value)
+        }
+
+        return  left_value + right_value;
+    }
+    else {
+        let left_value = (new_position_color(current_position, direction, left_bound) === color_none)
+        let right_value = (new_position_color(current_position, direction, right_bound) === color_none)
+        //logger('check_unbound_available. check_at:', check_at, ', current_position:', current_position, ', direction:', direction, ', left_bound:', left_bound, ', right_bound:', right_bound, ', color:', color, ', left_value:', left_value, ', right_value:', right_value, ', check_over_6:', check_over_6)
+        if (unbound_value) {
+            unbound_value.left = left_value + 0;
+            unbound_value.right = right_value + 0;
+            unbound_value.total = (left_value + right_value)
+        }
+        return left_value + right_value;
+        /*
+        return (new_position_color(current_position, direction, left_bound) === color_none) + 
+            (new_position_color(current_position, direction, right_bound) === color_none);
+        */
+    }    
 }
 
 export default function evaluate(current_position, color, player_color, opponent_color, caroBoard){
     chessBoard = caroBoard
-    var value = 0;
+    let value = 0;
 
-    if(color === opponent_color){
+    if (color === opponent_color) {
         value = value - 233;
     }
 
+    const unbound_value = {left:undefined, right:undefined, total: undefined};
+
+
+    // score to play a five in a row: 50000 + unbound_value.total * 2000 / 550000 (player)
+    // score to play a four in a row: 320 + unbound_value.total * 1200  / 2000 + unbound_value.total * 3000 (player)
+    // score to play a four in a row with 1 unbound: 1520 ???
+    // score to play a three in a row: 700 - 800 ???  2 three > 1 four
+    // score to play a three in a row with 1 unbound: 700 ???
+    // score to play a two in a row: 125-150 ???
+    // score to play a two in a row with 1 unbound: 120 ???
+    
+
     for(var direction = 0; direction<4; direction++) {
-        // ----------(1) 连五 11111 50000分
-        // 连五 1111* / ?1111*?
+        // ----------(1) Five (5) in a row 11111 , value: 50000
+        // Five (5) in a row 1111* / ?1111*?
         if((new_position_color(current_position, direction, -1) === color &&
             new_position_color(current_position, direction, -2) === color &&
             new_position_color(current_position, direction, -3) === color &&
             new_position_color(current_position, direction, -4) === color && 
-            is_unbound_available(current_position, direction, -5, 1, color))
+            check_unbound_available(current_position, direction, -5, 1, color, unbound_value, '1111* / ?1111*?', true))
             ||
             (new_position_color(current_position, direction+4, -1) === color &&
             new_position_color(current_position, direction+4, -2) === color &&
             new_position_color(current_position, direction+4, -3) === color &&
             new_position_color(current_position, direction+4, -4) === color &&
-            is_unbound_available(current_position, direction+4, -5, 1, color))
+            check_unbound_available(current_position, direction+4, -5, 1, color, unbound_value, '1111* / ?1111*?', true))
         ){            
             if(color === player_color){
                 value += 500000;
             }
-            value += 50000;
+            value += 50000 + unbound_value.total * 2000;
+
+            //logger('1111* / ?1111*?: value += 50000 + unbound_value.total * 2000:', value, ', unbound_value:', unbound_value, ', current_position:', current_position, ', color:', color, ', player_color:', player_color, ', opponent_color:', opponent_color)
             continue;
         }
-        // 连五 111*1 / ?111*1?
+        // Five (5) in a row 111*1 / ?111*1?
         if((new_position_color(current_position, direction, -1) === color &&
             new_position_color(current_position, direction, -2) === color &&
             new_position_color(current_position, direction, -3) === color &&
             new_position_color(current_position, direction, 1) === color && 
-            is_unbound_available(current_position, direction, -4, 2, color))
+            check_unbound_available(current_position, direction, -4, 2, color, unbound_value, '111*1 / ?111*1?', true))
             ||
             (new_position_color(current_position, direction+4, -1) === color &&
             new_position_color(current_position, direction+4, -2) === color &&
             new_position_color(current_position, direction+4, -3) === color &&
             new_position_color(current_position, direction+4, 1) === color && 
-            is_unbound_available(current_position, direction+4, -4, 2, color))
+            check_unbound_available(current_position, direction+4, -4, 2, color, unbound_value, '111*1 / ?111*1?', true))
         ){
             if(color === player_color){
                 value += 500000;
             }
-            value += 50000;
+            value += 50000 + unbound_value.total * 2000;
+
+            //logger('111*1 / ?111*1?: value += 50000 + unbound_value.total * 2000:', value, ', unbound_value:', unbound_value, ', current_position:', current_position, ', color:', color, ', player_color:', player_color, ', opponent_color:', opponent_color)
             continue;
         }
-        // 连五 11*11 / ?11*11?
+        // Five (5) in a row 11*11 / ?11*11?
         if(new_position_color(current_position, direction, -1) === color &&
             new_position_color(current_position, direction, -2) === color &&
             new_position_color(current_position, direction, 1) === color &&
             new_position_color(current_position, direction, 2) === color && 
-            is_unbound_available(current_position, direction, -3, 3, color)
+            check_unbound_available(current_position, direction, -3, 3, color, unbound_value, '11*11 / ?11*11?', true)
         ){
             if(color === player_color){
                 value += 500000;
             }
-            value += 50000;
+            value += 50000 + unbound_value.total * 2000;
+
+            //logger('11*11 / ?11*11?: value += 50000 + unbound_value.total * 2000:', value, ', unbound_value:', unbound_value, ', current_position:', current_position, ', color:', color, ', player_color:', player_color, ', opponent_color:', opponent_color)
             continue;
         }
 
-        // ----------(2) 活4 011110 4320分
-        // 活4 0111*0 / ?_111*_?  / 6 spaces, dont check bound
+        // Special cases
+        // ---------- 1_11*1, just the same with OXXX because streak XXXXXX not win. Dont need to check bound
+        // 1011*1 / ?1_11*1  / 4 in a row with 1 unbound
+        if((new_position_color(current_position, direction, -1) === color &&
+            new_position_color(current_position, direction, -2) === color &&
+            new_position_color(current_position, direction, -3) === color_none &&
+            new_position_color(current_position, direction, -4) === color &&
+            new_position_color(current_position, direction, 1) === color)
+            ||
+            (new_position_color(current_position, direction+4, -1) === color &&
+            new_position_color(current_position, direction+4, -2) === color &&
+            new_position_color(current_position, direction+4, -3) === color_none &&
+            new_position_color(current_position, direction+4, -4) === color &&
+            new_position_color(current_position, direction+4, 1) === color)
+        ){
+            value += 1150;
+
+            logger('1011*1 / 1_11*1: value += 1150:', value, ', current_position:', current_position, ', color:', color, ', player_color:', player_color, ', opponent_color:', opponent_color)
+            continue;
+        }
+
+        // ---------- 1*11_1, just the same with OXXX because streak XXXXXX not win
+        // 1*1101 / 1*11_1  / 4 in a row with 1 unbound
+        if((new_position_color(current_position, direction, -1) === color &&
+            new_position_color(current_position, direction, 1) === color &&
+            new_position_color(current_position, direction, 2) === color &&
+            new_position_color(current_position, direction, 3) === color_none &&
+            new_position_color(current_position, direction, 4) === color)
+            ||
+            (new_position_color(current_position, direction+4, -1) === color &&
+            new_position_color(current_position, direction+4, 1) === color &&
+            new_position_color(current_position, direction+4, 2) === color &&
+            new_position_color(current_position, direction+4, 3) === color_none &&
+            new_position_color(current_position, direction+4, 4) === color)
+        ){
+            value += 1150;
+
+            logger('1*1101 / 1*11_1: value += 1150:', value, ', current_position:', current_position, ', color:', color, ', player_color:', player_color, ', opponent_color:', opponent_color)
+            continue;
+        }
+
+        // ---------- 11_11*, just the same with OXXX because streak XXXXXX not win
+        // 11011* / 11_11*  /  3 in a row with 1 unbound
+        if((new_position_color(current_position, direction, -1) === color &&
+            new_position_color(current_position, direction, -2) === color &&
+            new_position_color(current_position, direction, -3) === color_none &&
+            new_position_color(current_position, direction, -4) === color &&
+            new_position_color(current_position, direction, -5) === color)
+            ||
+            (new_position_color(current_position, direction+4, -1) === color &&
+            new_position_color(current_position, direction+4, -2) === color &&
+            new_position_color(current_position, direction+4, -3) === color_none &&
+            new_position_color(current_position, direction+4, -4) === color &&
+            new_position_color(current_position, direction+4, -5) === color)
+        ){
+            value += 700;
+            
+            logger('11011* / 11_11*: value += 700:', value, ', current_position:', current_position, ', color:', color, ', player_color:', player_color, ', opponent_color:', opponent_color)
+            continue;
+        }
+        
+        // ---------- *11_11, just the same with OXXX because streak XXXXXX not win
+        // *11011 / *11_11  /  3 in a row with 1 unbound
+        if((new_position_color(current_position, direction, 1) === color &&
+            new_position_color(current_position, direction, 2) === color &&
+            new_position_color(current_position, direction, 3) === color_none &&
+            new_position_color(current_position, direction, 4) === color &&
+            new_position_color(current_position, direction, 5) === color)
+            ||
+            (new_position_color(current_position, direction+4, 1) === color &&
+            new_position_color(current_position, direction+4, 2) === color &&
+            new_position_color(current_position, direction+4, 3) === color_none &&
+            new_position_color(current_position, direction+4, 4) === color &&
+            new_position_color(current_position, direction+4, 5) === color)
+        ){
+            value += 700;
+
+            logger('*11011 / *11_11: value += 700:', value, ', current_position:', current_position, ', color:', color, ', player_color:', player_color, ', opponent_color:', opponent_color)
+            continue;
+        }
+
+
+        // ----------(2) Four (4) in the row: 011110 , value: 320 + unbound_value.total * 1200 // 4320
+        // Four (4) in the row 0111*0 / ?_111*_?
         if((new_position_color(current_position, direction, -1) === color &&
             new_position_color(current_position, direction, -2) === color &&
             new_position_color(current_position, direction, -3) === color &&
             new_position_color(current_position, direction, -4) === color_none &&
-            new_position_color(current_position, direction, 1) === color_none)
+            new_position_color(current_position, direction, 1) === color_none &&
+            check_unbound_available(current_position, direction, -5, 2, color, unbound_value, '0111*0 / ?_111*_?', false))
             ||
             (new_position_color(current_position, direction+4, -1) === color &&
             new_position_color(current_position, direction+4, -2) === color &&
             new_position_color(current_position, direction+4, -3) === color &&
-            new_position_color(current_position, direction+4, -4) === color_none &&
-            new_position_color(current_position, direction+4, 1) === color_none)
-        ){
-            value += 4320;
-            if(color === player_color){
-                value += 10000;
-            }
-            continue;
-        }
-        // 活4 011*10 / ?_11*1_? / 6 spaces, dont check bound
-        if((new_position_color(current_position, direction, -1) === color &&
-            new_position_color(current_position, direction, -2) === color &&
-            new_position_color(current_position, direction, 1) === color &&
-            new_position_color(current_position, direction, -3) === color_none &&
-            new_position_color(current_position, direction, 2) === color_none)
-            ||
-            (new_position_color(current_position, direction+4, -1) === color &&
-            new_position_color(current_position, direction+4, -2) === color &&
-            new_position_color(current_position, direction+4, 1) === color &&
-            new_position_color(current_position, direction+4, -3) === color_none &&
-            new_position_color(current_position, direction+4, 2) === color_none)
-        ){
-            if(color === player_color){
-                value += 10000;
-            }
-            value += 4320;
-            continue;
-        }
-
-        // ---------- 活三和死四 720分 1720分
-        // （3）and (4) 011100
-        // 活3 011*00 / ?_11*__? / 6 spaces, dont check bound
-        if((new_position_color(current_position, direction, -1) === color &&
-            new_position_color(current_position, direction, -2) === color &&
-            new_position_color(current_position, direction, 1) === color_none &&
-            new_position_color(current_position, direction, -3) === color_none &&
-            new_position_color(current_position, direction, 2) === color_none)
-            ||
-            (new_position_color(current_position, direction+4, -1) === color &&
-            new_position_color(current_position, direction+4, -2) === color &&
+            new_position_color(current_position, direction+4, -4) === color_none && 
             new_position_color(current_position, direction+4, 1) === color_none &&
-            new_position_color(current_position, direction+4, -3) === color_none &&
-            new_position_color(current_position, direction+4, 2) === color_none)
+            check_unbound_available(current_position, direction+4, -5, 2, color, unbound_value, '0111*0 / ?_111*_?', false))
         ){
-            value += 670;
+            if(color === player_color){
+                //value += 10000;
+                value += 2000 + unbound_value.total * 3000;
+            }
+
+            // value += 4320
+            value += 320 + unbound_value.total * 1200
+
+            logger('0111*0 / ?_111*_?: value += 520 + unbound_value.total * 1000 (and + 10000?):', value, ', unbound_value:', unbound_value, ', current_position:', current_position, ', color:', color, ', player_color:', player_color, ', opponent_color:', opponent_color)
             continue;
         }
 
-        // 活3 01*100 / ?_1*1__? / 6 spaces, dont check bound
+        // Four (4) in the row 011*10 / _11*1_ / 6 spaces, dont check bound
         if((new_position_color(current_position, direction, -1) === color &&
+            new_position_color(current_position, direction, -2) === color &&
+            new_position_color(current_position, direction, -3) === color_none &&
             new_position_color(current_position, direction, 1) === color &&
+            new_position_color(current_position, direction, 2) === color_none &&
+            check_unbound_available(current_position, direction, -4, 3, color, unbound_value, '011*10 / ?_11*1_?', false))
+            ||
+            (new_position_color(current_position, direction+4, -1) === color &&
+            new_position_color(current_position, direction+4, -2) === color &&
+            new_position_color(current_position, direction+4, -3) === color_none &&
+            new_position_color(current_position, direction+4, 1) === color &&
+            new_position_color(current_position, direction+4, 2) === color_none &&
+            check_unbound_available(current_position, direction+4, -4, 3, color, unbound_value, '011*10 / ?_11*1_?', false))
+        ){
+            if(color === player_color){
+                //value += 10000;
+                value += 2000 + unbound_value.total * 3000;
+            }
+
+            // value += 4320
+            value += 320 + unbound_value.total * 1200
+
+            logger('011*10 / _11*1_: value += 520 + unbound_value.total * 1000 (and + 10000?):', value, ', unbound_value:', unbound_value, ', current_position:', current_position, ', color:', color, ', player_color:', player_color, ', opponent_color:', opponent_color)
+            continue;
+        }
+
+        // ---------- Three (3) in the row and Four (4) space. Value: 720 or 1720
+        // （3）and (4) 011100
+        // Three (3) in the row 011*00 / ?_11*__? / 6 spaces, dont check bound
+        if((new_position_color(current_position, direction, -1) === color &&
+            new_position_color(current_position, direction, -2) === color &&
+            new_position_color(current_position, direction, -3) === color_none &&
+            new_position_color(current_position, direction, 1) === color_none &&
+            new_position_color(current_position, direction, 2) === color_none &&
+            check_unbound_available(current_position, direction, -4, 3, color, unbound_value, '011*00 / ?_11*__?', false))
+            ||
+            (new_position_color(current_position, direction+4, -1) === color &&
+            new_position_color(current_position, direction+4, -2) === color &&
+            new_position_color(current_position, direction+4, -3) === color_none &&
+            new_position_color(current_position, direction+4, 2) === color_none &&
+            new_position_color(current_position, direction+4, 1) === color_none &&
+            check_unbound_available(current_position, direction+4, -4, 3, color, unbound_value, '011*00 / ?_11*__?', false))
+        ){
+            //value += 750;
+            value += (350 + 220 * unbound_value.total);
+
+            logger('011*00 / ?_11*__?: value += (350 + 200 * unbound_value.total):', value, ', unbound_value:', unbound_value, ', current_position:', current_position, ', color:', color, ', player_color:', player_color, ', opponent_color:', opponent_color)
+            continue;
+        }
+
+        // Three (3) in the row 01*100 / ?_1*1__? / 6 spaces, dont check bound
+        if((new_position_color(current_position, direction, -1) === color &&
             new_position_color(current_position, direction, -2) === color_none &&
+            new_position_color(current_position, direction, 1) === color &&
+            new_position_color(current_position, direction, 2) === color_none &&
             new_position_color(current_position, direction, 3) === color_none &&
-            new_position_color(current_position, direction, 2) === color_none)
+            check_unbound_available(current_position, direction, -3, 4, color, unbound_value, '01*100 / ?_1*1__?', false))
+            ||
+            (new_position_color(current_position, direction+4, -1) === color &&
+            new_position_color(current_position, direction+4, -2) === color_none &&
+            new_position_color(current_position, direction+4, 1) === color &&
+            new_position_color(current_position, direction+4, 2) === color_none &&
+            new_position_color(current_position, direction+4, 3) === color_none &&
+            check_unbound_available(current_position, direction+4, -3, 4, color, unbound_value, '01*100 / ?_1*1__?', false))
+        ){
+            //value += 750;
+            value += (350 + 220 * unbound_value.total);
+
+            logger('01*100 / ?_1*1__?: value += (350 + 220 * unbound_value.total):', value, ', unbound_value:', unbound_value, ', current_position:', current_position, ', color:', color, ', player_color:', player_color, ', opponent_color:', opponent_color)
+            continue;
+        }
+
+        // Three (3) in the row 0*1100 / ?_*11__?
+        if((new_position_color(current_position, direction, 1) === color &&
+            new_position_color(current_position, direction, 2) === color &&
+            new_position_color(current_position, direction, 3) === color_none &&
+            new_position_color(current_position, direction, 4) === color_none &&
+            new_position_color(current_position, direction, -1) === color_none &&
+            check_unbound_available(current_position, direction, -2, 5, color, unbound_value, '0*1100 / ?_*11__?', false))
             ||
             (new_position_color(current_position, direction+4, 1) === color &&
-            new_position_color(current_position, direction+4, -1) === color &&
-            new_position_color(current_position, direction+4, -2) === color_none &&
+            new_position_color(current_position, direction+4, 2) === color &&
             new_position_color(current_position, direction+4, 3) === color_none &&
-            new_position_color(current_position, direction+4, 2) === color_none)
-        ){
-            value += 670;
-            continue;
-        }
-
-        // 活3 0*1100 / ?_*11__?
-        if((new_position_color(current_position, direction, 2) === color &&
-            new_position_color(current_position, direction, 1) === color &&
-            new_position_color(current_position, direction, 4) === color_none &&
-            new_position_color(current_position, direction, 3) === color_none &&
-            new_position_color(current_position, direction, -1) === color_none)
-            ||
-            (new_position_color(current_position, direction+4, 2) === color &&
-            new_position_color(current_position, direction+4, 1) === color &&
             new_position_color(current_position, direction+4, 4) === color_none &&
-            new_position_color(current_position, direction+4, 3) === color_none &&
-            new_position_color(current_position, direction+4, -1) === color_none)
+            new_position_color(current_position, direction+4, -1) === color_none &&
+            check_unbound_available(current_position, direction+4, -2, 5, color, unbound_value, '0*1100 / ?_*11__?', false))
         ){
-            value += 670;
+            //value += 750;
+            value += (350 + 220 * unbound_value.total);
+
+            logger('0*1100 / ?_*11__?: value += (350 + 220 * unbound_value.total):', value, ', unbound_value:', unbound_value, ', current_position:', current_position, ', color:', color, ', player_color:', player_color, ', opponent_color:', opponent_color)
             continue;
         }
 
@@ -222,15 +373,20 @@ export default function evaluate(current_position, color, player_color, opponent
             new_position_color(current_position, direction, -3) === color &&
             new_position_color(current_position, direction, -1) === color_none &&
             new_position_color(current_position, direction, -4) === color_none &&
-            new_position_color(current_position, direction, 1) === color_none)
+            new_position_color(current_position, direction, 1) === color_none &&
+            check_unbound_available(current_position, direction, -5, 2, color, unbound_value, '0110*0 / ?_11_*_?', false))
             ||
             (new_position_color(current_position, direction+4, -2) === color &&
             new_position_color(current_position, direction+4, -3) === color &&
             new_position_color(current_position, direction+4, -1) === color_none &&
             new_position_color(current_position, direction+4, -4) === color_none &&
-            new_position_color(current_position, direction+4, 1) === color_none)
+            new_position_color(current_position, direction+4, 1) === color_none &&
+            check_unbound_available(current_position, direction+4, -5, 2, color, unbound_value, '0110*0 / ?_11_*_?', false))
         ){
-            value += 620;
+            //value += 700;
+            value += (300 + 220 * unbound_value.total);
+
+            logger('0*1100 / ?_*11__?: value += (300 + 220 * unbound_value.total):', value, ', unbound_value:', unbound_value, ', current_position:', current_position, ', color:', color, ', player_color:', player_color, ', opponent_color:', opponent_color)
             continue;
         }
 
@@ -239,15 +395,20 @@ export default function evaluate(current_position, color, player_color, opponent
             new_position_color(current_position, direction, 2) === color &&
             new_position_color(current_position, direction, -2) === color_none &&
             new_position_color(current_position, direction, 1) === color_none &&
-            new_position_color(current_position, direction, 3) === color_none)
+            new_position_color(current_position, direction, 3) === color_none &&
+            check_unbound_available(current_position, direction, -3, 4, color, unbound_value, '01*010 / ?_1*_1_?', false))
             ||
             (new_position_color(current_position, direction+4, -1) === color &&
             new_position_color(current_position, direction+4, 2) === color &&
             new_position_color(current_position, direction+4, -2) === color_none &&
             new_position_color(current_position, direction+4, 1) === color_none &&
-            new_position_color(current_position, direction+4, 3) === color_none)
+            new_position_color(current_position, direction+4, 3) === color_none &&
+            check_unbound_available(current_position, direction+4, -3, 4, color, unbound_value, '01*010 / ?_1*_1_?', false))
         ){
-            value += 620;
+            //value += 700;
+            value += (300 + 220 * unbound_value.total);
+
+            logger('01*010 / ?_1*_1_?: value += (300 + 220 * unbound_value.total):', value, ', unbound_value:', unbound_value, ', current_position:', current_position, ', color:', color, ', player_color:', player_color, ', opponent_color:', opponent_color)
             continue;
         }
 
@@ -256,15 +417,20 @@ export default function evaluate(current_position, color, player_color, opponent
             new_position_color(current_position, direction, 3) === color &&
             new_position_color(current_position, direction, -1) === color_none &&
             new_position_color(current_position, direction, 2) === color_none &&
-            new_position_color(current_position, direction, 4) === color_none)
+            new_position_color(current_position, direction, 4) === color_none &&
+            check_unbound_available(current_position, direction, -2, 5, color, unbound_value, '0*1010 / ?_*1_1_?', false))
             ||
             (new_position_color(current_position, direction+4, 1) === color &&
             new_position_color(current_position, direction+4, 3) === color &&
             new_position_color(current_position, direction+4, -1) === color_none &&
             new_position_color(current_position, direction+4, 2) === color_none &&
-            new_position_color(current_position, direction+4, 4) === color_none)
+            new_position_color(current_position, direction+4, 4) === color_none &&
+            check_unbound_available(current_position, direction+4, -2, 5, color, unbound_value, '0*1010 / ?_*1_1_?', false))
         ){
-            value += 620;
+            //value += 700;
+            value += (300 + 220 * unbound_value.total);
+
+            logger('0*1010 / ?_*1_1_?: value += (300 + 220 * unbound_value.total):', value, ', unbound_value:', unbound_value, ', current_position:', current_position, ', color:', color, ', player_color:', player_color, ', opponent_color:', opponent_color)
             continue;
         }
 
@@ -274,15 +440,20 @@ export default function evaluate(current_position, color, player_color, opponent
             new_position_color(current_position, direction, -2) === color &&
             new_position_color(current_position, direction, -3) === color &&
             new_position_color(current_position, direction, 1) === color_none && 
-            is_unbound_available(current_position, direction, -4, 2, color))
+            check_unbound_available(current_position, direction, -4, 2, color, unbound_value, '111*0 / ?111*_?', true))
             ||
             (new_position_color(current_position, direction+4, -1) === color &&
             new_position_color(current_position, direction+4, -2) === color &&
             new_position_color(current_position, direction+4, -3) === color &&
             new_position_color(current_position, direction+4, 1) === color_none && 
-            is_unbound_available(current_position, direction+4, -4, 2, color))
+            check_unbound_available(current_position, direction+4, -4, 2, color, unbound_value, '111*0 / ?111*_?', true))
         ){
-            value += 1770;
+            //value += 1770;
+
+            // unbound_value.total not 2 because it has at least 1 bound
+            value += 1250;
+            
+            logger('?111*0? / ?111*_?: value += 1250:', value, ', unbound_value:', unbound_value, ', current_position:', current_position, ', color:', color, ', player_color:', player_color, ', opponent_color:', opponent_color)
             continue;
         }
 
@@ -291,15 +462,20 @@ export default function evaluate(current_position, color, player_color, opponent
             new_position_color(current_position, direction, -2) === color &&
             new_position_color(current_position, direction, 1) === color &&
             new_position_color(current_position, direction, 2) === color_none && 
-            is_unbound_available(current_position, direction, -3, 3, color))
+            check_unbound_available(current_position, direction, -3, 3, color, unbound_value, '11*10 / ?11*1_?', true))
             ||
             (new_position_color(current_position, direction+4, -1) === color &&
             new_position_color(current_position, direction+4, -2) === color &&
             new_position_color(current_position, direction+4, 1) === color &&
             new_position_color(current_position, direction+4, 2) === color_none && 
-            is_unbound_available(current_position, direction+4, -3, 3, color))
+            check_unbound_available(current_position, direction+4, -3, 3, color, unbound_value, '11*10 / ?11*1_?', true))
         ){
-            value += 1770;
+            //value += 1770;
+            
+            // unbound_value.total not 2 because it has at least 1 bound
+            value += 1250;
+        
+            logger('?11*10? / ?11*1_?: value += 1250:', value, ', unbound_value:', unbound_value, ', current_position:', current_position, ', color:', color, ', player_color:', player_color, ', opponent_color:', opponent_color)
             continue;
         }
 
@@ -308,15 +484,20 @@ export default function evaluate(current_position, color, player_color, opponent
             new_position_color(current_position, direction, 2) === color &&
             new_position_color(current_position, direction, -1) === color &&
             new_position_color(current_position, direction, 3) === color_none && 
-            is_unbound_available(current_position, direction, -2, 4, color))
+            check_unbound_available(current_position, direction, -2, 4, color, unbound_value, '1*110 / ?1*11_?', true))
             ||
             (new_position_color(current_position, direction+4, 1) === color &&
             new_position_color(current_position, direction+4, 2) === color &&
             new_position_color(current_position, direction+4, -1) === color &&
             new_position_color(current_position, direction+4, 3) === color_none && 
-            is_unbound_available(current_position, direction+4, -2, 4, color))
+            check_unbound_available(current_position, direction+4, -2, 4, color, unbound_value, '1*110 / ?1*11_?', true))
         ){
-            value += 1770;
+            //value += 1770;
+            
+            // unbound_value.total not 2 because it has at least 1 bound
+            value += 1250;
+
+            logger('?1*110? / ?1*11_?: value += 1250:', value, ', unbound_value:', unbound_value, ', current_position:', current_position, ', color:', color, ', player_color:', player_color, ', opponent_color:', opponent_color)
             continue;
         }
 
@@ -325,15 +506,20 @@ export default function evaluate(current_position, color, player_color, opponent
             new_position_color(current_position, direction, 2) === color &&
             new_position_color(current_position, direction, 3) === color &&
             new_position_color(current_position, direction, 4) === color_none && 
-            is_unbound_available(current_position, direction, -1, 5, color))
+            check_unbound_available(current_position, direction, -1, 5, color, unbound_value, '*1110 / ?*111_?', true))
             ||
             (new_position_color(current_position, direction+4, 1) === color &&
             new_position_color(current_position, direction+4, 2) === color &&
             new_position_color(current_position, direction+4, 3) === color &&
             new_position_color(current_position, direction+4, 4) === color_none && 
-            is_unbound_available(current_position, direction+4, -1, 5, color))
+            check_unbound_available(current_position, direction+4, -1, 5, color, unbound_value, '*1110 / ?*111_?', true))
         ){
-            value += 1770;
+            //value += 1770;
+            
+            // unbound_value.total not 2 because it has at least 1 bound
+            value += 1250;
+            
+            logger('?*1110? / ?*111_?: value += 1250:', value, ', unbound_value:', unbound_value, ', current_position:', current_position, ', color:', color, ', player_color:', player_color, ', opponent_color:', opponent_color)
             continue;
         }
 
@@ -343,15 +529,19 @@ export default function evaluate(current_position, color, player_color, opponent
             new_position_color(current_position, direction, 2) === color &&
             new_position_color(current_position, direction, 3) === color &&
             new_position_color(current_position, direction, 1) === color_none && 
-            is_unbound_available(current_position, direction, -2, 4, color))
+            check_unbound_available(current_position, direction, -2, 4, color, unbound_value, '1*011 / ?1*_11?'))
             ||
             (new_position_color(current_position, direction+4, -1) === color &&
             new_position_color(current_position, direction+4, 2) === color &&
             new_position_color(current_position, direction+4, 3) === color &&
             new_position_color(current_position, direction+4, 1) === color_none && 
-            is_unbound_available(current_position, direction+4, -2, 4, color))
+            check_unbound_available(current_position, direction+4, -2, 4, color, unbound_value, '1*011 / ?1*_11?'))
         ){
-            value += 720;
+            //value += 720;
+            if (unbound_value.total)
+                value += (150 + 350 * unbound_value.total);
+
+            logger('1*011 / ?1*_11?: value += (150 + 350 * unbound_value):', value, ', unbound_value:', unbound_value, ', current_position:', current_position, ', color:', color, ', player_color:', player_color, ', opponent_color:', opponent_color)
             continue;
         }
 
@@ -360,15 +550,19 @@ export default function evaluate(current_position, color, player_color, opponent
             new_position_color(current_position, direction, 3) === color &&
             new_position_color(current_position, direction, 4) === color &&
             new_position_color(current_position, direction, 2) === color_none && 
-            is_unbound_available(current_position, direction, -1, 5, color))
+            check_unbound_available(current_position, direction, -1, 5, color, unbound_value, '*1011 / ?*1_11?'))
             ||
             (new_position_color(current_position, direction+4, 1) === color &&
             new_position_color(current_position, direction+4, 3) === color &&
             new_position_color(current_position, direction+4, 4) === color &&
             new_position_color(current_position, direction+4, 2) === color_none && 
-            is_unbound_available(current_position, direction+4, -1, 5, color))
+            check_unbound_available(current_position, direction+4, -1, 5, color, unbound_value, '*1011 / ?*1_11?'))
         ){
-            value += 720;
+            //value += 720;
+            if (unbound_value.total)
+                value += (150 + 350 * unbound_value.total);
+            
+            logger('*1011 / ?*1_11?: value += (150 + 350 * unbound_value):', value, ', unbound_value:', unbound_value, ', current_position:', current_position, ', color:', color, ', player_color:', player_color, ', opponent_color:', opponent_color)
             continue;
         }
 
@@ -378,15 +572,19 @@ export default function evaluate(current_position, color, player_color, opponent
             new_position_color(current_position, direction, -2) === color &&
             new_position_color(current_position, direction, 2) === color &&
             new_position_color(current_position, direction, 1) === color_none && 
-            is_unbound_available(current_position, direction, -3, 3, color))
+            check_unbound_available(current_position, direction, -3, 3, color, unbound_value, '11*01 / ?11*_1?'))
             ||
             (new_position_color(current_position, direction+4, -1) === color &&
             new_position_color(current_position, direction+4, -2) === color &&
             new_position_color(current_position, direction+4, 2) === color &&
             new_position_color(current_position, direction+4, 1) === color_none && 
-            is_unbound_available(current_position, direction+4, -3, 3, color))
+            check_unbound_available(current_position, direction+4, -3, 3, color, unbound_value, '11*01 / ?11*_1?'))
         ){
-            value += 745;
+            //value += 745;
+            if (unbound_value.total)
+                value += (160 + 370 * unbound_value.total);
+
+            logger('11*01 / ?11*_1?: value += (160 + 370 * unbound_value.total):', value, ', unbound_value:', unbound_value, ', current_position:', current_position, ', color:', color, ', player_color:', player_color, ', opponent_color:', opponent_color)
             continue;
         }
 
@@ -395,15 +593,19 @@ export default function evaluate(current_position, color, player_color, opponent
             new_position_color(current_position, direction, 1) === color &&
             new_position_color(current_position, direction, 3) === color &&
             new_position_color(current_position, direction, 2) === color_none && 
-            is_unbound_available(current_position, direction, -2, 4, color))
+            check_unbound_available(current_position, direction, -2, 4, color, unbound_value, '1*101 / ?1*1_1?'))
             ||
             (new_position_color(current_position, direction+4, -1) === color &&
             new_position_color(current_position, direction+4, 1) === color &&
             new_position_color(current_position, direction+4, 3) === color &&
             new_position_color(current_position, direction+4, 2) === color_none && 
-            is_unbound_available(current_position, direction+4, -2, 4, color))
+            check_unbound_available(current_position, direction+4, -2, 4, color, unbound_value, '1*101 / ?1*1_1?'))
         ){
-            value += 745;
+            //value += 745;
+            if (unbound_value.total)
+                value += (160 + 370 * unbound_value.total);
+
+            logger('1*101 / ?1*1_1?: value += (160 + 370 * unbound_value.total):', value, ', unbound_value:', unbound_value, ', current_position:', current_position, ', color:', color, ', player_color:', player_color, ', opponent_color:', opponent_color)
             continue;
         }
 
@@ -412,15 +614,19 @@ export default function evaluate(current_position, color, player_color, opponent
             new_position_color(current_position, direction, 2) === color &&
             new_position_color(current_position, direction, 4) === color &&
             new_position_color(current_position, direction, 3) === color_none && 
-            is_unbound_available(current_position, direction, -1, 5, color))
+            check_unbound_available(current_position, direction, -1, 5, color, unbound_value, '*1101 / ?*11_1?'))
             ||
             (new_position_color(current_position, direction+4, 1) === color &&
             new_position_color(current_position, direction+4, 2) === color &&
             new_position_color(current_position, direction+4, 4) === color &&
             new_position_color(current_position, direction+4, 3) === color_none && 
-            is_unbound_available(current_position, direction+4, -1, 5, color))
+            check_unbound_available(current_position, direction+4, -1, 5, color, unbound_value, '*1101 / ?*11_1?'))
         ){
-            value += 745;
+            //value += 745;
+            if (unbound_value.total)
+                value += (160 + 370 * unbound_value.total);
+
+            logger('*1101 / ?*11_1?: value += (160 + 370 * unbound_value.total):', value, ', unbound_value:', unbound_value, ', current_position:', current_position, ', color:', color, ', player_color:', player_color, ', opponent_color:', opponent_color)
             continue;
         }
 
@@ -429,15 +635,19 @@ export default function evaluate(current_position, color, player_color, opponent
             new_position_color(current_position, direction, -3) === color &&
             new_position_color(current_position, direction, -4) === color &&
             new_position_color(current_position, direction, -1) === color_none && 
-            is_unbound_available(current_position, direction, -5, 1, color))
+            check_unbound_available(current_position, direction, -5, 1, color, unbound_value, '1110* / ?111_*?'))
             ||
             (new_position_color(current_position, direction+4, -2) === color &&
             new_position_color(current_position, direction+4, -3) === color &&
             new_position_color(current_position, direction+4, -4) === color &&
             new_position_color(current_position, direction+4, -1) === color_none && 
-            is_unbound_available(current_position, direction+4, -5, 1, color))
+            check_unbound_available(current_position, direction+4, -5, 1, color, unbound_value, '1110* / ?111_*?'))
         ){
-            value += 745;
+            //value += 745;
+            if (unbound_value.total)
+                value += (160 + 370 * unbound_value.total);
+
+            logger('1110* / ?111_*?: value += (160 + 370 * unbound_value.total):', value, ', unbound_value:', unbound_value, ', current_position:', current_position, ', color:', color, ', player_color:', player_color, ', opponent_color:', opponent_color)
             continue;
         }
 

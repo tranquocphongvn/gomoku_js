@@ -67,6 +67,7 @@ function getPlayers(isPlayerX) {
     }
 }
 
+// get elements
 const gridColumnHeaders = $(".grid-column-headers")
 const gridRowHeaders = $(".grid-row-headers")
 const gridCaroContainer = $(".grid-caro-container")
@@ -76,6 +77,10 @@ const btnPCvsHuman = $("#btn-pc-vs-human")
 const btnHumanvsHuman = $("#btn-human-vs-human")
 const btnRestart = $("#btn-restart")
 const btnToggleFullscreen = $("#btn-toggle-fullscreen")
+const btnFirst = $("#btn-first")
+const btnPrev = $("#btn-prev")
+const btnNext = $("#btn-next")
+const btnLast = $("#btn-last")
 const lblPlayerX = $("#playerX")
 const lblPlayerO = $("#playerO")
 
@@ -127,13 +132,15 @@ function updateCaroBoard(row, column, gridCaroCell) {
             showWonItems(checkWhoWon)
             
             let msg = `${checkWhoWon.caroValue === Global.CARO_X? Global.PLAYER_X : checkWhoWon.caroValue === Global.CARO_O? Global.PLAYER_O : checkWhoWon.caroValue} has Won by [${checkWhoWon.direction}]!!! at (row: ${checkWhoWon.row}, column: ${checkWhoWon.column})`
-            setTimeout(() => { 
-                console.log(msg)
+            console.log(msg)
+            /*
+            setTimeout(() => {
                 if (currentMode === PlayingMode.PCvsPC) {
                     // restart autoplay again
                     startPCvsPCMode(true)
                 }
             }, RESTART_TIMEOUT)
+            */
         }
         else if (currentMode === PlayingMode.PCvsPC) {
             let ai_position = AI_position()
@@ -204,17 +211,21 @@ gridCaroContainer.onclick = function(e) {
         if (gridCaroCell && !gridCaroCell.innerHTML)
         {
             if (currentMode === PlayingMode.Unknown) {
-                currentMode = PlayingMode.HumanvsPC
-                startHumanvsPCMode(false)
+                currentMode = PlayingMode.HumanvsHuman
+                startHumanvsHumanMode(false)
             }
 
             let row = Number(gridCaroCell.dataset.row)
             let column =  Number(gridCaroCell.dataset.column)
             
-            if (!theCaroBoard.getFirstMove())
-            {
+            if (!theCaroBoard.getFirstMove()) {
                 theCaroBoard.setFirstMove(row, column)
             }
+            else if (!theCaroBoard.getSecondMove())
+            {
+                theCaroBoard.setSecondMove(row, column)
+            }
+
             
             //console.log('After. isPCTurn:', isPCTurn, ', currentMode:', currentMode, ', isPlayer1 Playing:', isPlayer1Playing, ', isPlayer2 Playing:', isPlayer2Playing)
 
@@ -331,6 +342,72 @@ btnToggleFullscreen.onclick = function(e) {
     }
 }
 
+btnPrev.onclick = function(e) {
+    if (!isEndGame)
+        return null
+    
+    let index = theCaroBoard.getIndexPlayed()
+    let point = theCaroBoard.getPointPlayedByIndex(index)
+
+    if (point && point.row != null && point.column != null && point.row >=0 && point.column >= 0) {
+        let gridCaroCell = $(`.grid-caro-cell[data-row="${point.row}"][data-column="${point.column}"]`)
+        if (gridCaroCell && gridCaroCell.innerHTML) {
+            gridCaroCell.innerHTML = point.caroValue === Global.CARO_X? Global.CaroXSpan : Global.CaroOSpan
+
+            setTimeout( () => {
+                const img = $("img.newest")
+                if (img) {
+                    img.classList.remove("newest")
+                }
+                gridCaroCell.innerHTML = ''
+            }, BASE_TIMEOUT)
+        }    
+    }
+
+    console.log('btnPrev: ', index, ', point:', point)
+    theCaroBoard.setIndexPlayed(--index)
+}
+btnNext.onclick = function(e) {
+    if (!isEndGame)
+        return null
+
+    
+    if (!theCaroBoard.lastIndexPlayed()) {
+        let index = theCaroBoard.getIndexPlayed()
+        let point = theCaroBoard.getPointPlayedByIndex(index)
+    
+        if (point && point.row != null && point.column != null && point.row >=0 && point.column >= 0) {
+            let gridCaroCell = $(`.grid-caro-cell[data-row="${point.row}"][data-column="${point.column}"]`)
+            if (gridCaroCell && !gridCaroCell.innerHTML) {
+                gridCaroCell.innerHTML = point.caroValue === Global.CARO_X? Global.CaroXSpan : Global.CaroOSpan
+    
+                setTimeout( () => {
+                    const img = $("img.newest")
+                    if (img) {
+                        img.classList.remove("newest")
+                    }
+                }, BASE_TIMEOUT)
+            }    
+        }
+    
+        console.log('btnNext: ', index, ', point:', point)
+    
+        theCaroBoard.setIndexPlayed(++index)
+    }
+}
+
+
+btnLast.onclick = function (e) {
+    if (isEndGame)
+        return null
+
+    let ai_position = AI_position()
+    if (ai_position) {
+        //console.log('AI_position:', ai_position)
+        putCaroValue(ai_position[0], ai_position[1])
+    }
+}
+
 function startPCvsPCMode(newGame = true)
 {
     if (newGame) {
@@ -362,14 +439,29 @@ function startHumanvsPCMode(initBoard = true)
     }
 }
 
+function startHumanvsHumanMode(initBoard = true)
+{
+    btnPCvsPC.classList.remove('active')
+    btnHumanvsPC.classList.remove('active')
+    btnPCvsHuman.classList.remove('active')
+    btnHumanvsHuman.classList.add('active')
+    lblPlayerX.innerText = "Player X: Human"
+    lblPlayerO.innerText = "Player O: Human"
+    
+    isPCTurn = false
+    if (!isPlayer1Playing && !isPlayer2Playing && initBoard) {
+        currentMode = initCaroBoard(PlayingMode.HumanvsHuman)
+    }
+}
+
 
 function AI_position(playerColor, opponentColor) {
     let color_none = Global.EMPTY_CARO_VALUE;
 
     
     let players = getPlayers(isCaroX)
-    opponentColor = players.opponent;
     playerColor = players.player;
+    opponentColor = players.opponent;
     
     let max_value = 0;
     let current_value = 0;
@@ -407,6 +499,8 @@ function AI_position(playerColor, opponentColor) {
         return max_position
     }
 
+    let index = theCaroBoard.getIndexPlayed()
+    console.log('IndexPlayed:', index + 1, ', Players:', players, '. Evaluating...')
     availablePositions = []
     for (let row = 0; row < Global.MAX_ROWS; row++) {
         for (let col = 0; col < Global.MAX_COLUMNS; col++) {
@@ -420,7 +514,9 @@ function AI_position(playerColor, opponentColor) {
                 }
                 current_value = current_value_player_color + current_value_opponent_color;
                 if (current_value > max_value) {
-                    //console.log('AI_position. current_value:', current_value, '. max_value:', max_value)
+                    if (current_value >= 10000)
+                        console.log('IndexPlayed:', index + 1, ', AI_position. current_position:', current_position, ', current_value_player_color:', current_value_player_color, ', current_value_opponent_color:', current_value_opponent_color, ', current_value:', current_value, '> max_value:', max_value)
+
                     max_value = current_value;
                     max_position = current_position;
                     availablePositions.length = 0
@@ -434,9 +530,9 @@ function AI_position(playerColor, opponentColor) {
     }
     
     if (availablePositions && availablePositions.length >= 2 && max_value > 0) {
-        console.log('AI max_value:', max_value, '; available positions:', availablePositions)
+        console.log('IndexPlayed:', index + 1, ', Players:', players, ', AI max_value:', max_value, '; available positions:', availablePositions)
         
-        console.log('AI_position ---, chessBoard:', chessBoard)
+        //console.log('Players:', players, ', AI_position ---, chessBoard:', chessBoard)
         for (let i = 0; i < availablePositions.length; i++) {
             let tempBoard = theCaroBoard.getCopyBoard()
             getMaxMinPosition(availablePositions[i], playerColor, opponentColor, tempBoard, 2)
@@ -444,10 +540,10 @@ function AI_position(playerColor, opponentColor) {
 
         let randomIndex = Math.floor(Math.random() * availablePositions.length);
         max_position = availablePositions[randomIndex]
-        console.log('AI random index:', randomIndex, '; selected position:', max_position)
+        console.log('IndexPlayed:', index + 1, ', Players:', players, ', AI random index:', randomIndex, '; selected position:', max_position)
     }
-    else if (max_value >= 2000) {
-        console.log('AI max_value:', max_value, '; position:', max_position)
+    else if (max_value >= 400) {
+        console.log('IndexPlayed:', index + 1, ', Players:', players, ', AI max_value:', max_value, '; position:', max_position)
     }
     return max_position;
 }
@@ -455,9 +551,9 @@ function AI_position(playerColor, opponentColor) {
 function getMaxMinPosition(current_position, playerColor, opponentColor, chessBoard, deepLevel) {
     chessBoard[current_position[0]][current_position[1]] = playerColor
 
-    console.log('getMaxMinPosition ---, current_position:', current_position, ', deepLevel:', deepLevel)
+    //console.log('getMaxMinPosition ---, current_position:', current_position, ', deepLevel:', deepLevel)
     //console.log('getMaxMinPosition ---, chessBoard:', chessBoard)
-    console.log('getMaxMinPosition ---, playerColor:', playerColor, ', opponentColor:', opponentColor)
+    //console.log('getMaxMinPosition ---, playerColor:', playerColor, ', opponentColor:', opponentColor)
 
     let max_position = null;
 

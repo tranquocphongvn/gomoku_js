@@ -5,6 +5,13 @@ const CaroBoard = (() => {
     let autoPlayRadius = Global.AUTO_PLAY_RADIUS
     let firstMove = null
     let secondMove = null
+    let pointsPlayed = null
+    let indexPlayed = -1
+
+    function convertCaroValue(value) {
+        return value === Global.CARO_X? 'X' : (value === Global.CARO_O? 'O' : '< >')
+    }
+
     function create2DArray(rows, columns, defaultValue) {
         let arr = new Array();
         // Creates all lines:
@@ -37,6 +44,8 @@ const CaroBoard = (() => {
             autoPlayRadius = Global.AUTO_PLAY_RADIUS
             firstMove = null
             secondMove = null
+
+            pointsPlayed = []
         },
 
         getBoard() {
@@ -66,7 +75,39 @@ const CaroBoard = (() => {
         },
 
         putCaroValue(caroValue, row, column) {
+            let point = {
+                row, 
+                column, 
+                caroValue
+            }
+            pointsPlayed.push(point)
+            indexPlayed = pointsPlayed.length - 1;
+
             caroBoard[row][column] = caroValue
+        },
+
+        lastIndexPlayed() {
+            return (indexPlayed === pointsPlayed.length)
+        },
+        
+        getIndexPlayed() {
+            return indexPlayed
+        },
+
+        setIndexPlayed(index) {
+            if (index >= 0 && index <= pointsPlayed.length - 1)
+                indexPlayed = index
+        },
+
+        getPointsPlayed() {
+            return pointsPlayed
+        },
+
+        getPointPlayedByIndex(index) {
+            if (index >= 0 && index <= pointsPlayed.length - 1)
+                return pointsPlayed[index]
+            
+            return null
         },
 
         getRandomMove(caroValue) {
@@ -197,7 +238,7 @@ const CaroBoard = (() => {
                         //console.log(`Check WON? direction: ${direction}, row: ${row}, column: ${column}, caroValue: ${caroValue}, prevBound(item -1)[${prevBoundRow}, ${prevBoundColumn}]: ${prevBound}, '; nextBound(item +5)[${nextBoundRow}, ${nextBoundColumn}]: ${nextBound}`)
                         
                         if ((prevBound != caroValue) && (!prevBound || !nextBound)) { // only NUMBER_WON_ITEMS = 5 items and no bound by opponent
-                            console.log(`WON. direction: ${direction}, row: ${row}, column: ${column}, caroValue: ${caroValue}, prevBound(item -1)[${prevBoundRow}, ${prevBoundColumn}]: ${prevBound}, '; nextBound(item +5)[${nextBoundRow}, ${nextBoundColumn}]: ${nextBound}`)
+                            console.log(`WON. direction: ${direction}, row: ${row}, column: ${column}, caroValue: ${caroValue} (${convertCaroValue(caroValue)}), prevBound(item -1)[${prevBoundRow}, ${prevBoundColumn}]: ${prevBound}, nextBound(item +5)[${nextBoundRow}, ${nextBoundColumn}]: ${nextBound}`)
                             return {
                                 direction,
                                 caroValue,

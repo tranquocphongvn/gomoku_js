@@ -16,5 +16,6 @@ const Direction = {
 }
 const CaroXSpan = `<span class="middle-item"><img class="newest caro-cell" src="./img/x.png" alt="x"></span>`
 const CaroOSpan = `<span class="middle-item"><img class="newest caro-cell" src="./img/o.png" alt="o"></span>`
+const CaroEmptySpan = `<span class="middle-item"><img class="newest caro-cell" src="./img/empty.png" alt=""></span>`
 
-export {MAX_ROWS, MAX_COLUMNS, EMPTY_CARO_VALUE, CARO_X, CARO_O, NUMBER_WON_ITEMS, AUTO_PLAY_RADIUS, PLAYER_X, PLAYER_O, Direction, CaroXSpan, CaroOSpan}
+export {MAX_ROWS, MAX_COLUMNS, EMPTY_CARO_VALUE, CARO_X, CARO_O, NUMBER_WON_ITEMS, AUTO_PLAY_RADIUS, PLAYER_X, PLAYER_O, Direction, CaroXSpan, CaroOSpan, CaroEmptySpan}
