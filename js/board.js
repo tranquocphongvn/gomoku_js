@@ -5,8 +5,8 @@ const CaroBoard = (() => {
     let autoPlayRadius = Global.AUTO_PLAY_RADIUS
     let firstMove = null
     let secondMove = null
-    let pointsPlayed = null
-    let indexPlayed = -1
+    let historyPlayed = null
+    let indexHistoryPlayed = -1
 
     function convertCaroValue(value) {
         return value === Global.CARO_X? 'X' : (value === Global.CARO_O? 'O' : '< >')
@@ -45,7 +45,7 @@ const CaroBoard = (() => {
             firstMove = null
             secondMove = null
 
-            pointsPlayed = []
+            historyPlayed = []
         },
 
         getBoard() {
@@ -76,37 +76,63 @@ const CaroBoard = (() => {
 
         putCaroValue(caroValue, row, column) {
             let point = {
+                index: historyPlayed.length + 1,
                 row, 
                 column, 
                 caroValue
             }
-            pointsPlayed.push(point)
-            indexPlayed = pointsPlayed.length - 1;
+            historyPlayed.push(point)
+            indexHistoryPlayed = historyPlayed.length - 1;
 
             caroBoard[row][column] = caroValue
         },
 
-        lastIndexPlayed() {
-            return (indexPlayed === pointsPlayed.length)
+        getLastIndexPlayed() {
+            return historyPlayed.length - 1
         },
-        
-        getIndexPlayed() {
-            return indexPlayed
-        },
+
+        /*
 
         setIndexPlayed(index) {
-            if (index >= 0 && index <= pointsPlayed.length - 1)
-                indexPlayed = index
+            if (index >= 0 && index <= historyPlayed.length - 1)
+                indexHistoryPlayed = index
         },
 
-        getPointsPlayed() {
-            return pointsPlayed
+        getIndexPlayed() {
+            return indexHistoryPlayed
         },
 
+        getHistoryPlayed() {
+            return historyPlayed
+        },
+
+        
         getPointPlayedByIndex(index) {
-            if (index >= 0 && index <= pointsPlayed.length - 1)
-                return pointsPlayed[index]
+            if (index >= 0 && index <= historyPlayed.length - 1)
+                return historyPlayed[index]
             
+            return null
+        },
+        */
+
+        getPrevHistory() {
+            let index = indexHistoryPlayed;
+            if (index >= 0 && index <= historyPlayed.length - 1) {
+                indexHistoryPlayed = index - 1
+
+                return historyPlayed[index]
+            }
+            return null
+        },
+
+        getNextHistory() {
+            let index = indexHistoryPlayed + 1;
+            if (index >= 0 && index <= historyPlayed.length - 1) {
+                indexHistoryPlayed = index
+                
+                return historyPlayed[index]
+            }
+
             return null
         },
 

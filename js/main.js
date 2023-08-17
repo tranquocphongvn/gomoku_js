@@ -346,10 +346,11 @@ btnPrev.onclick = function(e) {
     if (!isEndGame)
         return null
     
-    let index = theCaroBoard.getIndexPlayed()
-    let point = theCaroBoard.getPointPlayedByIndex(index)
+    let point = theCaroBoard.getPrevHistory()
 
     if (point && point.row != null && point.column != null && point.row >=0 && point.column >= 0) {
+        console.log('btnPrev: ', point.index, ', point:', point, ', will be removed.')
+
         let gridCaroCell = $(`.grid-caro-cell[data-row="${point.row}"][data-column="${point.column}"]`)
         if (gridCaroCell && gridCaroCell.innerHTML) {
             gridCaroCell.innerHTML = point.caroValue === Global.CARO_X? Global.CaroXSpan : Global.CaroOSpan
@@ -363,36 +364,27 @@ btnPrev.onclick = function(e) {
             }, BASE_TIMEOUT)
         }    
     }
-
-    console.log('btnPrev: ', index, ', point:', point)
-    theCaroBoard.setIndexPlayed(--index)
 }
 btnNext.onclick = function(e) {
     if (!isEndGame)
         return null
 
     
-    if (!theCaroBoard.lastIndexPlayed()) {
-        let index = theCaroBoard.getIndexPlayed()
-        let point = theCaroBoard.getPointPlayedByIndex(index)
-    
-        if (point && point.row != null && point.column != null && point.row >=0 && point.column >= 0) {
-            let gridCaroCell = $(`.grid-caro-cell[data-row="${point.row}"][data-column="${point.column}"]`)
-            if (gridCaroCell && !gridCaroCell.innerHTML) {
-                gridCaroCell.innerHTML = point.caroValue === Global.CARO_X? Global.CaroXSpan : Global.CaroOSpan
-    
-                setTimeout( () => {
-                    const img = $("img.newest")
-                    if (img) {
-                        img.classList.remove("newest")
-                    }
-                }, BASE_TIMEOUT)
-            }    
-        }
-    
-        console.log('btnNext: ', index, ', point:', point)
-    
-        theCaroBoard.setIndexPlayed(++index)
+    let point = theCaroBoard.getNextHistory()
+
+    if (point && point.row != null && point.column != null && point.row >=0 && point.column >= 0) {
+        let gridCaroCell = $(`.grid-caro-cell[data-row="${point.row}"][data-column="${point.column}"]`)
+        if (gridCaroCell && !gridCaroCell.innerHTML) {
+            gridCaroCell.innerHTML = point.caroValue === Global.CARO_X? Global.CaroXSpan : Global.CaroOSpan
+
+            setTimeout( () => {
+                const img = $("img.newest")
+                if (img) {
+                    img.classList.remove("newest")
+                }
+            }, BASE_TIMEOUT)
+        }    
+        console.log('btnNext: ', point.index, ', point:', point)
     }
 }
 
@@ -499,8 +491,8 @@ function AI_position(playerColor, opponentColor) {
         return max_position
     }
 
-    let index = theCaroBoard.getIndexPlayed()
-    console.log('IndexPlayed:', index + 1, ', Players:', players, '. Evaluating...')
+    let index = theCaroBoard.getLastIndexPlayed() + 1
+    //console.log('IndexPlayed:', index + 1, ', Players:', players, '. Evaluating...')
     availablePositions = []
     for (let row = 0; row < Global.MAX_ROWS; row++) {
         for (let col = 0; col < Global.MAX_COLUMNS; col++) {
@@ -514,7 +506,7 @@ function AI_position(playerColor, opponentColor) {
                 }
                 current_value = current_value_player_color + current_value_opponent_color;
                 if (current_value > max_value) {
-                    if (current_value >= 10000)
+                    if (current_value >= 1000)
                         console.log('IndexPlayed:', index + 1, ', AI_position. current_position:', current_position, ', current_value_player_color:', current_value_player_color, ', current_value_opponent_color:', current_value_opponent_color, ', current_value:', current_value, '> max_value:', max_value)
 
                     max_value = current_value;

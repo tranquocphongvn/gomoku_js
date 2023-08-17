@@ -5,8 +5,21 @@ const board_boundary = 11;
 const color_none = Global.EMPTY_CARO_VALUE
 
 
-function logger(...log) {
-    console.log(...log)
+function logger(level, ...log) {
+    switch (level) {
+        case 3:
+            //console.log('Log level:', level, ', detail:', ...log)
+            break
+        case 4:
+            //console.log('Log level:', level, ', detail:', ...log)
+            break
+        case 5:
+            //console.log('Log level:', level, ', detail:', ...log)
+            break
+        default:
+            //console.log('Log level:', level, ', detail: ', ...log)
+            break
+    }
 }
 
 // The <new_position> relative to the <position>, <direction> and the <distance>
@@ -55,7 +68,7 @@ function check_unbound_available(current_position, direction, left_bound, right_
         let left_value = (new_position_color(current_position, direction, left_bound) === color_none && new_position_color(current_position, direction, right_bound) !== color)
         let right_value = (new_position_color(current_position, direction, left_bound) !== color && new_position_color(current_position, direction, right_bound) === color_none)
         
-        //logger('check_unbound_available. check_at:', check_at, ', current_position:', current_position, ', direction:', direction, ', left_bound:', left_bound, ', right_bound:', right_bound, ', color:', color, ', left_value:', left_value, ', right_value:', right_value, ', check_over_6:', check_over_6)
+        //logger(1, 'check_unbound_available. check_at:', check_at, ', current_position:', current_position, ', direction:', direction, ', left_bound:', left_bound, ', right_bound:', right_bound, ', color:', color, ', left_value:', left_value, ', right_value:', right_value, ', check_over_6:', check_over_6)
 
         if (unbound_value) {
             unbound_value.left = left_value + 0;
@@ -68,18 +81,36 @@ function check_unbound_available(current_position, direction, left_bound, right_
     else {
         let left_value = (new_position_color(current_position, direction, left_bound) === color_none)
         let right_value = (new_position_color(current_position, direction, right_bound) === color_none)
-        //logger('check_unbound_available. check_at:', check_at, ', current_position:', current_position, ', direction:', direction, ', left_bound:', left_bound, ', right_bound:', right_bound, ', color:', color, ', left_value:', left_value, ', right_value:', right_value, ', check_over_6:', check_over_6)
+        
+        //logger(1, 'check_unbound_available. check_at:', check_at, ', current_position:', current_position, ', direction:', direction, ', left_bound:', left_bound, ', right_bound:', right_bound, ', color:', color, ', left_value:', left_value, ', right_value:', right_value, ', check_over_6:', check_over_6)
+
         if (unbound_value) {
             unbound_value.left = left_value + 0;
             unbound_value.right = right_value + 0;
             unbound_value.total = (left_value + right_value)
         }
         return left_value + right_value;
-        /*
-        return (new_position_color(current_position, direction, left_bound) === color_none) + 
-            (new_position_color(current_position, direction, right_bound) === color_none);
-        */
     }    
+}
+
+function calculate_value(number_in_row, description, value, delta, unbound_value, current_position, color, player_color, opponent_color) {
+    switch (number_in_row) {
+        case 5:
+            if(color === player_color){
+                value += 500000;
+            }
+            value += 50000 + unbound_value.total * 2000;
+            description = description + ": value += 50000 + unbound_value.total * 2000:"
+            break
+        case 4:
+            break
+        default:
+            break;
+    }
+
+    logger(number_in_row, description, value, ', delta:', delta, ', unbound_value:', unbound_value, ', current_position:', current_position, ', color:', color, ', player_color:', player_color, ', opponent_color:', opponent_color)
+
+    return value
 }
 
 export default function evaluate(current_position, color, player_color, opponent_color, caroBoard){
@@ -87,7 +118,8 @@ export default function evaluate(current_position, color, player_color, opponent
     let value = 0;
 
     if (color === opponent_color) {
-        value = value - 233;
+        //value = value - 233;
+        value -= 200;
     }
 
     const unbound_value = {left:undefined, right:undefined, total: undefined};
@@ -116,13 +148,16 @@ export default function evaluate(current_position, color, player_color, opponent
             new_position_color(current_position, direction+4, -3) === color &&
             new_position_color(current_position, direction+4, -4) === color &&
             check_unbound_available(current_position, direction+4, -5, 1, color, unbound_value, '1111* / ?1111*?', true))
-        ){            
-            if(color === player_color){
-                value += 500000;
-            }
-            value += 50000 + unbound_value.total * 2000;
+        ){
+            
+            // if(color === player_color){
+            //     value += 500000;
+            // }
+            // value += 50000 + unbound_value.total * 2000;
 
-            //logger('1111* / ?1111*?: value += 50000 + unbound_value.total * 2000:', value, ', unbound_value:', unbound_value, ', current_position:', current_position, ', color:', color, ', player_color:', player_color, ', opponent_color:', opponent_color)
+            // logger(5, '1111* / ?1111*?: value += 50000 + unbound_value.total * 2000:', value, ', unbound_value:', unbound_value, ', current_position:', current_position, ', color:', color, ', player_color:', player_color, ', opponent_color:', opponent_color)
+
+            value += calculate_value(5, '1111* / ?1111*?', value, 0, unbound_value, current_position, color, player_color, opponent_color)
             continue;
         }
         // Five (5) in a row 111*1 / ?111*1?
@@ -138,12 +173,14 @@ export default function evaluate(current_position, color, player_color, opponent
             new_position_color(current_position, direction+4, 1) === color && 
             check_unbound_available(current_position, direction+4, -4, 2, color, unbound_value, '111*1 / ?111*1?', true))
         ){
-            if(color === player_color){
-                value += 500000;
-            }
-            value += 50000 + unbound_value.total * 2000;
+            // if(color === player_color){
+            //     value += 500000;
+            // }
+            // value += 50000 + unbound_value.total * 2000;
 
-            //logger('111*1 / ?111*1?: value += 50000 + unbound_value.total * 2000:', value, ', unbound_value:', unbound_value, ', current_position:', current_position, ', color:', color, ', player_color:', player_color, ', opponent_color:', opponent_color)
+            // logger(5, '111*1 / ?111*1?: value += 50000 + unbound_value.total * 2000:', value, ', unbound_value:', unbound_value, ', current_position:', current_position, ', color:', color, ', player_color:', player_color, ', opponent_color:', opponent_color)
+
+            value += calculate_value(5, '111*1 / ?111*1?', value, 0, unbound_value, current_position, color, player_color, opponent_color)
             continue;
         }
         // Five (5) in a row 11*11 / ?11*11?
@@ -153,12 +190,14 @@ export default function evaluate(current_position, color, player_color, opponent
             new_position_color(current_position, direction, 2) === color && 
             check_unbound_available(current_position, direction, -3, 3, color, unbound_value, '11*11 / ?11*11?', true)
         ){
-            if(color === player_color){
-                value += 500000;
-            }
-            value += 50000 + unbound_value.total * 2000;
+            // if(color === player_color){
+            //     value += 500000;
+            // }
+            // value += 50000 + unbound_value.total * 2000;
 
-            //logger('11*11 / ?11*11?: value += 50000 + unbound_value.total * 2000:', value, ', unbound_value:', unbound_value, ', current_position:', current_position, ', color:', color, ', player_color:', player_color, ', opponent_color:', opponent_color)
+            // logger(5, '11*11 / ?11*11?: value += 50000 + unbound_value.total * 2000:', value, ', unbound_value:', unbound_value, ', current_position:', current_position, ', color:', color, ', player_color:', player_color, ', opponent_color:', opponent_color)
+
+            value += calculate_value(5, '11*11 / ?11*11?', value, 0, unbound_value, current_position, color, player_color, opponent_color)
             continue;
         }
 
@@ -179,7 +218,7 @@ export default function evaluate(current_position, color, player_color, opponent
         ){
             value += 1150;
 
-            logger('1011*1 / 1_11*1: value += 1150:', value, ', current_position:', current_position, ', color:', color, ', player_color:', player_color, ', opponent_color:', opponent_color)
+            logger(4, '1011*1 / 1_11*1: value += 1150:', value, ', current_position:', current_position, ', color:', color, ', player_color:', player_color, ', opponent_color:', opponent_color)
             continue;
         }
 
@@ -199,7 +238,7 @@ export default function evaluate(current_position, color, player_color, opponent
         ){
             value += 1150;
 
-            logger('1*1101 / 1*11_1: value += 1150:', value, ', current_position:', current_position, ', color:', color, ', player_color:', player_color, ', opponent_color:', opponent_color)
+            logger(4, '1*1101 / 1*11_1: value += 1150:', value, ', current_position:', current_position, ', color:', color, ', player_color:', player_color, ', opponent_color:', opponent_color)
             continue;
         }
 
@@ -219,7 +258,7 @@ export default function evaluate(current_position, color, player_color, opponent
         ){
             value += 700;
             
-            logger('11011* / 11_11*: value += 700:', value, ', current_position:', current_position, ', color:', color, ', player_color:', player_color, ', opponent_color:', opponent_color)
+            logger(3, '11011* / 11_11*: value += 700:', value, ', current_position:', current_position, ', color:', color, ', player_color:', player_color, ', opponent_color:', opponent_color)
             continue;
         }
         
@@ -239,7 +278,7 @@ export default function evaluate(current_position, color, player_color, opponent
         ){
             value += 700;
 
-            logger('*11011 / *11_11: value += 700:', value, ', current_position:', current_position, ', color:', color, ', player_color:', player_color, ', opponent_color:', opponent_color)
+            logger(3, '*11011 / *11_11: value += 700:', value, ', current_position:', current_position, ', color:', color, ', player_color:', player_color, ', opponent_color:', opponent_color)
             continue;
         }
 
@@ -268,7 +307,7 @@ export default function evaluate(current_position, color, player_color, opponent
             // value += 4320
             value += 320 + unbound_value.total * 1200
 
-            logger('0111*0 / ?_111*_?: value += 520 + unbound_value.total * 1000 (and + 10000?):', value, ', unbound_value:', unbound_value, ', current_position:', current_position, ', color:', color, ', player_color:', player_color, ', opponent_color:', opponent_color)
+            logger(4, '0111*0 / ?_111*_?: value += 520 + unbound_value.total * 1000 (and + 10000?):', value, ', unbound_value:', unbound_value, ', current_position:', current_position, ', color:', color, ', player_color:', player_color, ', opponent_color:', opponent_color)
             continue;
         }
 
@@ -295,7 +334,7 @@ export default function evaluate(current_position, color, player_color, opponent
             // value += 4320
             value += 320 + unbound_value.total * 1200
 
-            logger('011*10 / _11*1_: value += 520 + unbound_value.total * 1000 (and + 10000?):', value, ', unbound_value:', unbound_value, ', current_position:', current_position, ', color:', color, ', player_color:', player_color, ', opponent_color:', opponent_color)
+            logger(4, '011*10 / _11*1_: value += 520 + unbound_value.total * 1000 (and + 10000?):', value, ', unbound_value:', unbound_value, ', current_position:', current_position, ', color:', color, ', player_color:', player_color, ', opponent_color:', opponent_color)
             continue;
         }
 
@@ -319,7 +358,7 @@ export default function evaluate(current_position, color, player_color, opponent
             //value += 750;
             value += (350 + 220 * unbound_value.total);
 
-            logger('011*00 / ?_11*__?: value += (350 + 200 * unbound_value.total):', value, ', unbound_value:', unbound_value, ', current_position:', current_position, ', color:', color, ', player_color:', player_color, ', opponent_color:', opponent_color)
+            logger(3, '011*00 / ?_11*__?: value += (350 + 200 * unbound_value.total):', value, ', unbound_value:', unbound_value, ', current_position:', current_position, ', color:', color, ', player_color:', player_color, ', opponent_color:', opponent_color)
             continue;
         }
 
@@ -341,7 +380,7 @@ export default function evaluate(current_position, color, player_color, opponent
             //value += 750;
             value += (350 + 220 * unbound_value.total);
 
-            logger('01*100 / ?_1*1__?: value += (350 + 220 * unbound_value.total):', value, ', unbound_value:', unbound_value, ', current_position:', current_position, ', color:', color, ', player_color:', player_color, ', opponent_color:', opponent_color)
+            logger(3, '01*100 / ?_1*1__?: value += (350 + 220 * unbound_value.total):', value, ', unbound_value:', unbound_value, ', current_position:', current_position, ', color:', color, ', player_color:', player_color, ', opponent_color:', opponent_color)
             continue;
         }
 
@@ -363,7 +402,7 @@ export default function evaluate(current_position, color, player_color, opponent
             //value += 750;
             value += (350 + 220 * unbound_value.total);
 
-            logger('0*1100 / ?_*11__?: value += (350 + 220 * unbound_value.total):', value, ', unbound_value:', unbound_value, ', current_position:', current_position, ', color:', color, ', player_color:', player_color, ', opponent_color:', opponent_color)
+            logger(3, '0*1100 / ?_*11__?: value += (350 + 220 * unbound_value.total):', value, ', unbound_value:', unbound_value, ', current_position:', current_position, ', color:', color, ', player_color:', player_color, ', opponent_color:', opponent_color)
             continue;
         }
 
@@ -386,7 +425,7 @@ export default function evaluate(current_position, color, player_color, opponent
             //value += 700;
             value += (300 + 220 * unbound_value.total);
 
-            logger('0*1100 / ?_*11__?: value += (300 + 220 * unbound_value.total):', value, ', unbound_value:', unbound_value, ', current_position:', current_position, ', color:', color, ', player_color:', player_color, ', opponent_color:', opponent_color)
+            logger(3, '0*1100 / ?_*11__?: value += (300 + 220 * unbound_value.total):', value, ', unbound_value:', unbound_value, ', current_position:', current_position, ', color:', color, ', player_color:', player_color, ', opponent_color:', opponent_color)
             continue;
         }
 
@@ -408,7 +447,7 @@ export default function evaluate(current_position, color, player_color, opponent
             //value += 700;
             value += (300 + 220 * unbound_value.total);
 
-            logger('01*010 / ?_1*_1_?: value += (300 + 220 * unbound_value.total):', value, ', unbound_value:', unbound_value, ', current_position:', current_position, ', color:', color, ', player_color:', player_color, ', opponent_color:', opponent_color)
+            logger(3, '01*010 / ?_1*_1_?: value += (300 + 220 * unbound_value.total):', value, ', unbound_value:', unbound_value, ', current_position:', current_position, ', color:', color, ', player_color:', player_color, ', opponent_color:', opponent_color)
             continue;
         }
 
@@ -430,7 +469,7 @@ export default function evaluate(current_position, color, player_color, opponent
             //value += 700;
             value += (300 + 220 * unbound_value.total);
 
-            logger('0*1010 / ?_*1_1_?: value += (300 + 220 * unbound_value.total):', value, ', unbound_value:', unbound_value, ', current_position:', current_position, ', color:', color, ', player_color:', player_color, ', opponent_color:', opponent_color)
+            logger(3, '0*1010 / ?_*1_1_?: value += (300 + 220 * unbound_value.total):', value, ', unbound_value:', unbound_value, ', current_position:', current_position, ', color:', color, ', player_color:', player_color, ', opponent_color:', opponent_color)
             continue;
         }
 
@@ -453,7 +492,7 @@ export default function evaluate(current_position, color, player_color, opponent
             // unbound_value.total not 2 because it has at least 1 bound
             value += 1250;
             
-            logger('?111*0? / ?111*_?: value += 1250:', value, ', unbound_value:', unbound_value, ', current_position:', current_position, ', color:', color, ', player_color:', player_color, ', opponent_color:', opponent_color)
+            logger(4, '?111*0? / ?111*_?: value += 1250:', value, ', unbound_value:', unbound_value, ', current_position:', current_position, ', color:', color, ', player_color:', player_color, ', opponent_color:', opponent_color)
             continue;
         }
 
@@ -475,7 +514,7 @@ export default function evaluate(current_position, color, player_color, opponent
             // unbound_value.total not 2 because it has at least 1 bound
             value += 1250;
         
-            logger('?11*10? / ?11*1_?: value += 1250:', value, ', unbound_value:', unbound_value, ', current_position:', current_position, ', color:', color, ', player_color:', player_color, ', opponent_color:', opponent_color)
+            logger(4, '?11*10? / ?11*1_?: value += 1250:', value, ', unbound_value:', unbound_value, ', current_position:', current_position, ', color:', color, ', player_color:', player_color, ', opponent_color:', opponent_color)
             continue;
         }
 
@@ -497,7 +536,7 @@ export default function evaluate(current_position, color, player_color, opponent
             // unbound_value.total not 2 because it has at least 1 bound
             value += 1250;
 
-            logger('?1*110? / ?1*11_?: value += 1250:', value, ', unbound_value:', unbound_value, ', current_position:', current_position, ', color:', color, ', player_color:', player_color, ', opponent_color:', opponent_color)
+            logger(4, '?1*110? / ?1*11_?: value += 1250:', value, ', unbound_value:', unbound_value, ', current_position:', current_position, ', color:', color, ', player_color:', player_color, ', opponent_color:', opponent_color)
             continue;
         }
 
@@ -519,7 +558,7 @@ export default function evaluate(current_position, color, player_color, opponent
             // unbound_value.total not 2 because it has at least 1 bound
             value += 1250;
             
-            logger('?*1110? / ?*111_?: value += 1250:', value, ', unbound_value:', unbound_value, ', current_position:', current_position, ', color:', color, ', player_color:', player_color, ', opponent_color:', opponent_color)
+            logger(4, '?*1110? / ?*111_?: value += 1250:', value, ', unbound_value:', unbound_value, ', current_position:', current_position, ', color:', color, ', player_color:', player_color, ', opponent_color:', opponent_color)
             continue;
         }
 
@@ -529,19 +568,18 @@ export default function evaluate(current_position, color, player_color, opponent
             new_position_color(current_position, direction, 2) === color &&
             new_position_color(current_position, direction, 3) === color &&
             new_position_color(current_position, direction, 1) === color_none && 
-            check_unbound_available(current_position, direction, -2, 4, color, unbound_value, '1*011 / ?1*_11?'))
+            check_unbound_available(current_position, direction, -2, 4, color, unbound_value, '1*011 / ?1*_11?', true))
             ||
             (new_position_color(current_position, direction+4, -1) === color &&
             new_position_color(current_position, direction+4, 2) === color &&
             new_position_color(current_position, direction+4, 3) === color &&
             new_position_color(current_position, direction+4, 1) === color_none && 
-            check_unbound_available(current_position, direction+4, -2, 4, color, unbound_value, '1*011 / ?1*_11?'))
+            check_unbound_available(current_position, direction+4, -2, 4, color, unbound_value, '1*011 / ?1*_11?', true))
         ){
             //value += 720;
-            if (unbound_value.total)
-                value += (150 + 350 * unbound_value.total);
+            value += (150 + 350 * unbound_value.total);
 
-            logger('1*011 / ?1*_11?: value += (150 + 350 * unbound_value):', value, ', unbound_value:', unbound_value, ', current_position:', current_position, ', color:', color, ', player_color:', player_color, ', opponent_color:', opponent_color)
+            logger(3, '1*011 / ?1*_11?: value += (150 + 350 * unbound_value):', value, ', unbound_value:', unbound_value, ', current_position:', current_position, ', color:', color, ', player_color:', player_color, ', opponent_color:', opponent_color)
             continue;
         }
 
@@ -550,19 +588,18 @@ export default function evaluate(current_position, color, player_color, opponent
             new_position_color(current_position, direction, 3) === color &&
             new_position_color(current_position, direction, 4) === color &&
             new_position_color(current_position, direction, 2) === color_none && 
-            check_unbound_available(current_position, direction, -1, 5, color, unbound_value, '*1011 / ?*1_11?'))
+            check_unbound_available(current_position, direction, -1, 5, color, unbound_value, '*1011 / ?*1_11?', true))
             ||
             (new_position_color(current_position, direction+4, 1) === color &&
             new_position_color(current_position, direction+4, 3) === color &&
             new_position_color(current_position, direction+4, 4) === color &&
             new_position_color(current_position, direction+4, 2) === color_none && 
-            check_unbound_available(current_position, direction+4, -1, 5, color, unbound_value, '*1011 / ?*1_11?'))
+            check_unbound_available(current_position, direction+4, -1, 5, color, unbound_value, '*1011 / ?*1_11?', true))
         ){
             //value += 720;
-            if (unbound_value.total)
-                value += (150 + 350 * unbound_value.total);
+            value += (150 + 350 * unbound_value.total);
             
-            logger('*1011 / ?*1_11?: value += (150 + 350 * unbound_value):', value, ', unbound_value:', unbound_value, ', current_position:', current_position, ', color:', color, ', player_color:', player_color, ', opponent_color:', opponent_color)
+            logger(3, '*1011 / ?*1_11?: value += (150 + 350 * unbound_value):', value, ', unbound_value:', unbound_value, ', current_position:', current_position, ', color:', color, ', player_color:', player_color, ', opponent_color:', opponent_color)
             continue;
         }
 
@@ -572,19 +609,18 @@ export default function evaluate(current_position, color, player_color, opponent
             new_position_color(current_position, direction, -2) === color &&
             new_position_color(current_position, direction, 2) === color &&
             new_position_color(current_position, direction, 1) === color_none && 
-            check_unbound_available(current_position, direction, -3, 3, color, unbound_value, '11*01 / ?11*_1?'))
+            check_unbound_available(current_position, direction, -3, 3, color, unbound_value, '11*01 / ?11*_1?', true))
             ||
             (new_position_color(current_position, direction+4, -1) === color &&
             new_position_color(current_position, direction+4, -2) === color &&
             new_position_color(current_position, direction+4, 2) === color &&
             new_position_color(current_position, direction+4, 1) === color_none && 
-            check_unbound_available(current_position, direction+4, -3, 3, color, unbound_value, '11*01 / ?11*_1?'))
+            check_unbound_available(current_position, direction+4, -3, 3, color, unbound_value, '11*01 / ?11*_1?', true))
         ){
             //value += 745;
-            if (unbound_value.total)
-                value += (160 + 370 * unbound_value.total);
+            value += (160 + 370 * unbound_value.total);
 
-            logger('11*01 / ?11*_1?: value += (160 + 370 * unbound_value.total):', value, ', unbound_value:', unbound_value, ', current_position:', current_position, ', color:', color, ', player_color:', player_color, ', opponent_color:', opponent_color)
+            logger(3, '11*01 / ?11*_1?: value += (160 + 370 * unbound_value.total):', value, ', unbound_value:', unbound_value, ', current_position:', current_position, ', color:', color, ', player_color:', player_color, ', opponent_color:', opponent_color)
             continue;
         }
 
@@ -593,19 +629,18 @@ export default function evaluate(current_position, color, player_color, opponent
             new_position_color(current_position, direction, 1) === color &&
             new_position_color(current_position, direction, 3) === color &&
             new_position_color(current_position, direction, 2) === color_none && 
-            check_unbound_available(current_position, direction, -2, 4, color, unbound_value, '1*101 / ?1*1_1?'))
+            check_unbound_available(current_position, direction, -2, 4, color, unbound_value, '1*101 / ?1*1_1?', true))
             ||
             (new_position_color(current_position, direction+4, -1) === color &&
             new_position_color(current_position, direction+4, 1) === color &&
             new_position_color(current_position, direction+4, 3) === color &&
             new_position_color(current_position, direction+4, 2) === color_none && 
-            check_unbound_available(current_position, direction+4, -2, 4, color, unbound_value, '1*101 / ?1*1_1?'))
+            check_unbound_available(current_position, direction+4, -2, 4, color, unbound_value, '1*101 / ?1*1_1?', true))
         ){
             //value += 745;
-            if (unbound_value.total)
-                value += (160 + 370 * unbound_value.total);
+            value += (160 + 370 * unbound_value.total);
 
-            logger('1*101 / ?1*1_1?: value += (160 + 370 * unbound_value.total):', value, ', unbound_value:', unbound_value, ', current_position:', current_position, ', color:', color, ', player_color:', player_color, ', opponent_color:', opponent_color)
+            logger(3, '1*101 / ?1*1_1?: value += (160 + 370 * unbound_value.total):', value, ', unbound_value:', unbound_value, ', current_position:', current_position, ', color:', color, ', player_color:', player_color, ', opponent_color:', opponent_color)
             continue;
         }
 
@@ -614,19 +649,18 @@ export default function evaluate(current_position, color, player_color, opponent
             new_position_color(current_position, direction, 2) === color &&
             new_position_color(current_position, direction, 4) === color &&
             new_position_color(current_position, direction, 3) === color_none && 
-            check_unbound_available(current_position, direction, -1, 5, color, unbound_value, '*1101 / ?*11_1?'))
+            check_unbound_available(current_position, direction, -1, 5, color, unbound_value, '*1101 / ?*11_1?', true))
             ||
             (new_position_color(current_position, direction+4, 1) === color &&
             new_position_color(current_position, direction+4, 2) === color &&
             new_position_color(current_position, direction+4, 4) === color &&
             new_position_color(current_position, direction+4, 3) === color_none && 
-            check_unbound_available(current_position, direction+4, -1, 5, color, unbound_value, '*1101 / ?*11_1?'))
+            check_unbound_available(current_position, direction+4, -1, 5, color, unbound_value, '*1101 / ?*11_1?', true))
         ){
             //value += 745;
-            if (unbound_value.total)
-                value += (160 + 370 * unbound_value.total);
+            value += (160 + 370 * unbound_value.total);
 
-            logger('*1101 / ?*11_1?: value += (160 + 370 * unbound_value.total):', value, ', unbound_value:', unbound_value, ', current_position:', current_position, ', color:', color, ', player_color:', player_color, ', opponent_color:', opponent_color)
+            logger(3, '*1101 / ?*11_1?: value += (160 + 370 * unbound_value.total):', value, ', unbound_value:', unbound_value, ', current_position:', current_position, ', color:', color, ', player_color:', player_color, ', opponent_color:', opponent_color)
             continue;
         }
 
@@ -635,19 +669,18 @@ export default function evaluate(current_position, color, player_color, opponent
             new_position_color(current_position, direction, -3) === color &&
             new_position_color(current_position, direction, -4) === color &&
             new_position_color(current_position, direction, -1) === color_none && 
-            check_unbound_available(current_position, direction, -5, 1, color, unbound_value, '1110* / ?111_*?'))
+            check_unbound_available(current_position, direction, -5, 1, color, unbound_value, '1110* / ?111_*?', true))
             ||
             (new_position_color(current_position, direction+4, -2) === color &&
             new_position_color(current_position, direction+4, -3) === color &&
             new_position_color(current_position, direction+4, -4) === color &&
             new_position_color(current_position, direction+4, -1) === color_none && 
-            check_unbound_available(current_position, direction+4, -5, 1, color, unbound_value, '1110* / ?111_*?'))
+            check_unbound_available(current_position, direction+4, -5, 1, color, unbound_value, '1110* / ?111_*?', true))
         ){
             //value += 745;
-            if (unbound_value.total)
-                value += (160 + 370 * unbound_value.total);
+            value += (160 + 370 * unbound_value.total);
 
-            logger('1110* / ?111_*?: value += (160 + 370 * unbound_value.total):', value, ', unbound_value:', unbound_value, ', current_position:', current_position, ', color:', color, ', player_color:', player_color, ', opponent_color:', opponent_color)
+            logger(3, '1110* / ?111_*?: value += (160 + 370 * unbound_value.total):', value, ', unbound_value:', unbound_value, ', current_position:', current_position, ', color:', color, ', player_color:', player_color, ', opponent_color:', opponent_color)
             continue;
         }
 
