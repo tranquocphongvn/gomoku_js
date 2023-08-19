@@ -1,7 +1,7 @@
 :root {
-    --grid-columns: 35;
-    --grid-rows: 25;
-    --cell-width-height: 30px;
+    --grid-columns: 42;
+    --grid-rows: 30;
+    --cell-width-height: 23px;
 
     --grid-row-headers-top: 8px;
     --grid-width: calc(var(--grid-columns) * var(--cell-width-height));
@@ -99,6 +99,13 @@
     background-color: rgba(0, 255, 255, 0.8)
 }
 
+.divide {
+    display: inline-block;
+    height: 20px;
+    width: 3px;
+    border: 0px;
+}
+
 .space {
     height: var(--cell-width-height);
 }
@@ -183,11 +190,21 @@ img.caro-cell {
 img.newest {
     background-color: rgba(255, 255, 0, 0.9)
 }
- 
+
 span.middle-item {
     margin: 0;
     padding: 0;
     display: table-cell;
     vertical-align: middle;
     align-content: center;
+}
+
+.center {
+    margin: 0;
+    padding: 0;
+    align-content: center;
+}
+
+.invisible {
+    display: none;
 }

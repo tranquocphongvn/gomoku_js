@@ -10,10 +10,11 @@
         <title>Gomoku Online</title>
         <meta name="description" content="">
         <meta name="viewport" content="width=device-width, initial-scale=1">
+        <link rel="stylesheet" href="./main.css" crossorigin>
         <link rel="preconnect" href="https://fonts.googleapis.com">
         <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
         <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@100&display=swap" rel="stylesheet">
-        <link rel="stylesheet" href="./main.css">
+        <link rel="shortcut icon" href="#">
     </head>
     <body>
         <!--[if lt IE 7]>
@@ -51,13 +52,22 @@
                     <div class="space"></div>
                     <input class="controller" type="button" id="btn-restart" value="Restart game">
                     <div class="space"></div>
+                    <div class="space"></div>
                     <input class="controller" type="button" id="btn-toggle-fullscreen" value="Toggle Fullscreen">
                     <div class="space"></div>
-                    <div>
-                        <input class="controller" type="button" id="btn-first" value=" << ">
+                    <div class="center">
+                        <input class="controller" type="button" id="btn-save" value=" Save ">
+                        <div class="divide"></div>
+                        <input class="controller" type="button" id="btn-load" value=" Load ">
+                    </div>
+                    <div class="space"></div>
+                    <div class="center">
+                        <input class="controller invisible" type="button" id="btn-first" value=" << ">
                         <input class="controller" type="button" id="btn-prev" value=" < ">
+                        <div class="divide"></div>
                         <input class="controller" type="button" id="btn-next" value=" > ">
-                        <input class="controller" type="button" id="btn-last" value=" >> ">
+                        <div class="divide"></div>
+                        <input class="controller" type="button" id="btn-last" value=" => ">
                     </div>
                     <div class="space"></div>
                     <div class="label inturn" id="playerX">Player X: Unknown</div>

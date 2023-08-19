@@ -82,13 +82,25 @@ const CaroBoard = (() => {
                 caroValue
             }
             historyPlayed.push(point)
-            indexHistoryPlayed = historyPlayed.length - 1;
+            indexHistoryPlayed = historyPlayed.length - 1
 
             caroBoard[row][column] = caroValue
         },
 
         getLastIndexPlayed() {
             return historyPlayed.length - 1
+        },
+
+        getHistoryPlayed() {
+            return historyPlayed
+        },
+
+        historyToText() {
+            let text = historyPlayed.reduce((accu_text, point) => {
+                        return accu_text + `[${point.row}, ${point.column}: ${point.caroValue}]; `
+                    }, 
+                '')
+            return text
         },
 
         /*

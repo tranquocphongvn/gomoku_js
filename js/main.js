@@ -4,10 +4,11 @@ import {buildCaroGrid, buildColumnHeaders, buildRowHeaders, showWonItems} from '
 import evaluate from './gomoku_ai.js'
 import CaroBoard from './board.js'
 
-const theCaroBoard = CaroBoard()
-
 const BASE_TIMEOUT = 300
 const RESTART_TIMEOUT = 5000
+const GOMOKU_STORAGE_KEY = 'GOMOKU_STORAGE'
+
+const theCaroBoard = CaroBoard()
 
 const $ = document.querySelector.bind(document)
 const $$ = document.querySelectorAll.bind(document)
@@ -81,6 +82,9 @@ const btnFirst = $("#btn-first")
 const btnPrev = $("#btn-prev")
 const btnNext = $("#btn-next")
 const btnLast = $("#btn-last")
+const btnSave = $("#btn-save")
+const btnLoad = $("#btn-load")
+
 const lblPlayerX = $("#playerX")
 const lblPlayerO = $("#playerO")
 
@@ -243,7 +247,7 @@ gridCaroContainer.onclick = function(e) {
 }
 
 btnPCvsPC.onclick = function(e) {
-    if (currentMode !== PlayingMode.PCvsPC) {
+    if (currentMode !== PlayingMode.PCvsPC || (currentMode === PlayingMode.PCvsPC && isEndGame) ) {
         btnPCvsPC.classList.add('active')
         btnHumanvsPC.classList.remove('active')
         btnPCvsHuman.classList.remove('active')
@@ -349,7 +353,7 @@ btnPrev.onclick = function(e) {
     let point = theCaroBoard.getPrevHistory()
 
     if (point && point.row != null && point.column != null && point.row >=0 && point.column >= 0) {
-        console.log('btnPrev: ', point.index, ', point:', point, ', will be removed.')
+        console.log('btnPrev:', point.index, ', point:', point, ', will be removed.')
 
         let gridCaroCell = $(`.grid-caro-cell[data-row="${point.row}"][data-column="${point.column}"]`)
         if (gridCaroCell && gridCaroCell.innerHTML) {
@@ -361,7 +365,7 @@ btnPrev.onclick = function(e) {
                     img.classList.remove("newest")
                 }
                 gridCaroCell.innerHTML = ''
-            }, BASE_TIMEOUT)
+            }, BASE_TIMEOUT * 2)
         }    
     }
 }
@@ -382,9 +386,9 @@ btnNext.onclick = function(e) {
                 if (img) {
                     img.classList.remove("newest")
                 }
-            }, BASE_TIMEOUT)
+            }, BASE_TIMEOUT * 2)
         }    
-        console.log('btnNext: ', point.index, ', point:', point)
+        console.log('btnNext:', point.index, ', point:', point)
     }
 }
 
@@ -399,6 +403,74 @@ btnLast.onclick = function (e) {
         putCaroValue(ai_position[0], ai_position[1])
     }
 }
+
+btnSave.onclick = function (e) {
+    let text = theCaroBoard.historyToText()
+    localStorage.setItem(GOMOKU_STORAGE_KEY, JSON.stringify(text));
+    console.log('Saved historyInText:', text)
+    
+    // let saving = {}
+    // saving['Game-01'] = text
+    // localStorage.setItem(GOMOKU_STORAGE_KEY, JSON.stringify(saving));
+
+}
+
+btnLoad.onclick = function (e) {
+    // let text = JSON.parse(localStorage.getItem(GOMOKU_STORAGE_KEY)) || {}
+    let text = JSON.parse(localStorage.getItem(GOMOKU_STORAGE_KEY))
+    //console.log('historyInText:', text)
+    
+    if (text) {
+        let pointTexts = text.split(';')
+        
+        if (pointTexts && (pointTexts[pointTexts.length - 1].indexOf(']') === -1)) {
+            pointTexts.splice(pointTexts.length - 1, 1)
+        }
+
+        let points = pointTexts.map( (value, index) => {
+            if (value) {
+                value = value.replaceAll(' ', '').replace('[', '').replace(']', '').replace(':', ',')
+                let values = value.split(',')
+                let point = {
+                    index: index + 1,
+                    row: parseInt(values[0]),
+                    column: parseInt(values[1]),
+                    caroValue: parseInt(values[2])
+                }
+                return point
+            }
+            return null
+        })
+        //console.log('points:', points)
+
+        btnPCvsPC.classList.remove('active')
+        btnHumanvsPC.classList.remove('active')
+        btnPCvsHuman.classList.remove('active')
+        btnHumanvsHuman.classList.remove('active')
+        lblPlayerX.innerText = "Player X: Unknown"
+        lblPlayerO.innerText = "Player O: Unknown"
+
+        isPCTurn = false
+        if (timerPCPlaying)
+            clearTimeout(timerPCPlaying)
+
+        currentMode = initCaroBoard(PlayingMode.Unknown)
+
+        if (points && points.length > 0)
+            theCaroBoard.setFirstMove(points[0].row, points[0].column)
+
+        if (points && points.length > 1)
+            theCaroBoard.setSecondMove(points[1].row, points[1].column)
+
+        points.forEach(value => {
+            putCaroValue(value.row, value.column)
+        })
+    }
+    else {
+        console.log('Nothing to load')
+    }
+}
+
 
 function startPCvsPCMode(newGame = true)
 {
@@ -505,13 +577,20 @@ function AI_position(playerColor, opponentColor) {
                     current_value_opponent_color = 0;
                 }
                 current_value = current_value_player_color + current_value_opponent_color;
+
+                
+                // if ((row === 18 && col === 19) || (row === -1 && col === 19)) {
+                //     console.log('- IndexPlayed:', index + 1, ', Players:', players, ', current_position:', current_position, ', current_value_player_color:', current_value_player_color, ', current_value_opponent_color:', current_value_opponent_color, ', current_value:', current_value, ', max_value:', max_value)
+                // }
+                
+
                 if (current_value > max_value) {
                     if (current_value >= 1000)
-                        console.log('IndexPlayed:', index + 1, ', AI_position. current_position:', current_position, ', current_value_player_color:', current_value_player_color, ', current_value_opponent_color:', current_value_opponent_color, ', current_value:', current_value, '> max_value:', max_value)
+                        console.log('- IndexPlayed:', index + 1, ', Players:', players, ', current_position:', current_position, ', current_value_player_color:', current_value_player_color, ', current_value_opponent_color:', current_value_opponent_color, ', current_value:', current_value, '> max_value:', max_value)
 
                     max_value = current_value;
                     max_position = current_position;
-                    availablePositions.length = 0
+                    availablePositions.length = 0 // reset the array
                     availablePositions.push(max_position)
                 }
                 else if (current_value === max_value) {
@@ -534,7 +613,7 @@ function AI_position(playerColor, opponentColor) {
         max_position = availablePositions[randomIndex]
         console.log('IndexPlayed:', index + 1, ', Players:', players, ', AI random index:', randomIndex, '; selected position:', max_position)
     }
-    else if (max_value >= 400) {
+    else if (max_value >= 500) {
         console.log('IndexPlayed:', index + 1, ', Players:', players, ', AI max_value:', max_value, '; position:', max_position)
     }
     return max_position;
