@@ -578,14 +578,12 @@ function AI_position(playerColor, opponentColor) {
                 }
                 current_value = current_value_player_color + current_value_opponent_color;
 
-                
-                // if ((row === 18 && col === 19) || (row === -1 && col === 19)) {
+                // if ((row === 13 && col === 22) || (row === 13 && col === 23) || (row === 15 && col === 22) || (row === 14 && col === 23)) {
                 //     console.log('- IndexPlayed:', index + 1, ', Players:', players, ', current_position:', current_position, ', current_value_player_color:', current_value_player_color, ', current_value_opponent_color:', current_value_opponent_color, ', current_value:', current_value, ', max_value:', max_value)
                 // }
-                
 
                 if (current_value > max_value) {
-                    if (current_value >= 1000)
+                    if (current_value >= 500)
                         console.log('- IndexPlayed:', index + 1, ', Players:', players, ', current_position:', current_position, ', current_value_player_color:', current_value_player_color, ', current_value_opponent_color:', current_value_opponent_color, ', current_value:', current_value, '> max_value:', max_value)
 
                     max_value = current_value;

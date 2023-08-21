@@ -6,23 +6,22 @@ const color_none = Global.EMPTY_CARO_VALUE
 
 
 function logger(level, current_position, ...log) {
-    // if (!(current_position[0] === 18 && current_position[1] === 19) && !(current_position[0] === -20 && current_position[1] === 16)) {
+    // if (!(current_position[0] === 13 && current_position[1] === 22) && !(current_position[0] === 13 && current_position[1] === 23) && !(current_position[0] === 15 && current_position[1] === 22) && !(current_position[0] === 14 && current_position[1] === 23)) {
     //     return
     // }
 
-
     switch (level) {
         case 2:
-            //console.log('Log level:', level, ', current_position:', current_position, ...log)
+            // console.log('Log level:', level, ', current_position:', current_position, ...log)
             break
         case 3:
-            //console.log('Log level:', level, ', current_position:', current_position, ...log)
+            // console.log('Log level:', level, ', current_position:', current_position, ...log)
             break
         case 4:
-            //console.log('Log level:', level, ', current_position:', current_position, ...log)
+            // console.log('Log level:', level, ', current_position:', current_position, ...log)
             break
         case 5:
-            console.log('Log level:', level, ', current_position:', current_position, ...log)
+            // console.log('Log level:', level, ', current_position:', current_position, ...log)
             break
         default:
             //console.log('Log level:', level, ', current_position:', current_position, ...log)
@@ -998,7 +997,7 @@ export default function evaluate(current_position, color, player_color, opponent
             continue;
         }
 
-        // 隔二 （13）and (14) 001010
+        // 隔二 （13）and (14) 001010 : __(1)_(1)_
         // 隔二 0010*0 / __1_*_ / 6 spaces, dont check bound
         if((new_position_color(current_position, direction, -2) === color &&
             new_position_color(current_position, direction, -1) === color_none &&
@@ -1014,9 +1013,19 @@ export default function evaluate(current_position, color, player_color, opponent
         ){
             //value += 115;
 
+            // if (current_position[0] === 13 && current_position[1] === 22) {
+            //     console.log('0010*0 / __1_*_. direction:', direction, ':', new_position_color(current_position, direction, -4), new_position_color(current_position, direction, -3), new_position_color(current_position, direction, -2), new_position_color(current_position, direction, -1), '*', new_position_color(current_position, direction, 1))
+            //     console.log('0010*0 / __1_*_. direction+4:', direction+4, ':', new_position_color(current_position, direction+4, -4), new_position_color(current_position, direction+4, -3), new_position_color(current_position, direction+4, -2), new_position_color(current_position, direction+4, -1), '*', new_position_color(current_position, direction+4, 1))
+            // }
+
             value = calculate_value(2, current_position, ', 0010*0 / __1_*_', value, 0, unbound_value, color, player_color, opponent_color)
             continue;
         }
+
+        // if (current_position[0] === 13 && current_position[1] === 22) {
+        //     console.log('+ 00*010 / __*_1_. direction:', direction, ':', new_position_color(current_position, direction, -2), new_position_color(current_position, direction, -1), '*', new_position_color(current_position, direction, 1), new_position_color(current_position, direction, 2), new_position_color(current_position, direction, 3))
+        //     console.log('+ 00*010 / __*_1_. direction+4:', direction+4, ':', new_position_color(current_position, direction+4, -2), new_position_color(current_position, direction+4, -1), '*', new_position_color(current_position, direction+4, 1), new_position_color(current_position, direction+4, 2), new_position_color(current_position, direction+4, 3))
+        // }
 
         // 隔二 00*010 / __*_1_
         if((new_position_color(current_position, direction, 2) === color &&
@@ -1032,6 +1041,11 @@ export default function evaluate(current_position, color, player_color, opponent
             new_position_color(current_position, direction+4, 3) === color_none)
         ){
             //value += 115;
+
+            // if (current_position[0] === 13 && current_position[1] === 22) {
+            //     console.log('00*010 / __*_1_. direction:', direction, ':', new_position_color(current_position, direction, -2), new_position_color(current_position, direction, -1), '*', new_position_color(current_position, direction, 1), new_position_color(current_position, direction, 2), new_position_color(current_position, direction, 3))
+            //     console.log('00*010 / __*_1_. direction+4:', direction+4, ':', new_position_color(current_position, direction+4, -2), new_position_color(current_position, direction+4, -1), '*', new_position_color(current_position, direction+4, 1), new_position_color(current_position, direction+4, 2), new_position_color(current_position, direction+4, 3))
+            // }
 
             value = calculate_value(2, current_position, ', 00*010 / __*_1_', value, 0, unbound_value, color, player_color, opponent_color)
             continue;
