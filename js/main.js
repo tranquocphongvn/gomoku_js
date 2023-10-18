@@ -214,10 +214,15 @@ gridCaroContainer.onclick = function(e) {
 
         if (gridCaroCell && !gridCaroCell.innerHTML)
         {
+            // if (currentMode === PlayingMode.Unknown) {
+            //     currentMode = PlayingMode.HumanvsHuman
+            //     startHumanvsHumanMode(false)
+            // }
             if (currentMode === PlayingMode.Unknown) {
-                currentMode = PlayingMode.HumanvsHuman
-                startHumanvsHumanMode(false)
+                currentMode = PlayingMode.HumanvsPC
+                startHumanvsPCMode(false)
             }
+
 
             let row = Number(gridCaroCell.dataset.row)
             let column =  Number(gridCaroCell.dataset.column)
@@ -520,9 +525,6 @@ function startHumanvsHumanMode(initBoard = true)
 
 
 function AI_position(playerColor, opponentColor) {
-    let color_none = Global.EMPTY_CARO_VALUE;
-
-    
     let players = getPlayers(isCaroX)
     playerColor = players.player;
     opponentColor = players.opponent;
@@ -568,7 +570,7 @@ function AI_position(playerColor, opponentColor) {
     availablePositions = []
     for (let row = 0; row < Global.MAX_ROWS; row++) {
         for (let col = 0; col < Global.MAX_COLUMNS; col++) {
-            if (chessBoard[row][col] === color_none) {
+            if (chessBoard[row][col] === Global.EMPTY_CARO_VALUE) {
                 current_position = [row, col];
                 current_value_player_color = evaluate(current_position, playerColor, playerColor, opponentColor, chessBoard);
                 current_value_opponent_color = evaluate(current_position, opponentColor, playerColor, opponentColor, chessBoard); // OR ??? current_value_opponent_color = evaluate(current_position, playerColor, opponentColor, playerColor, chessBoard);
@@ -583,7 +585,7 @@ function AI_position(playerColor, opponentColor) {
                 // }
 
                 if (current_value > max_value) {
-                    if (current_value >= 500)
+                    if (current_value >= 2500)
                         console.log('- IndexPlayed:', index + 1, ', Players:', players, ', current_position:', current_position, ', current_value_player_color:', current_value_player_color, ', current_value_opponent_color:', current_value_opponent_color, ', current_value:', current_value, '> max_value:', max_value)
 
                     max_value = current_value;
@@ -601,61 +603,62 @@ function AI_position(playerColor, opponentColor) {
     if (availablePositions && availablePositions.length >= 2 && max_value > 0) {
         console.log('IndexPlayed:', index + 1, ', Players:', players, ', AI max_value:', max_value, '; available positions:', availablePositions)
         
-        //console.log('Players:', players, ', AI_position ---, chessBoard:', chessBoard)
-        for (let i = 0; i < availablePositions.length; i++) {
-            let tempBoard = theCaroBoard.getCopyBoard()
-            getMaxMinPosition(availablePositions[i], playerColor, opponentColor, tempBoard, 2)
-        }
+        // console.log('Players:', players, ', AI_position ---, chessBoard:', chessBoard)
+        // for (let i = 0; i < availablePositions.length; i++) {
+        //     let tempBoard = theCaroBoard.getCopyBoard()
+        //     let maxPosition = getMaxMinPosition(availablePositions[i], playerColor, opponentColor, tempBoard, 1)
+
+        //     console.log('getMaxMinPosition:', availablePositions[i], ':', maxPosition)
+        // }
 
         let randomIndex = Math.floor(Math.random() * availablePositions.length);
         max_position = availablePositions[randomIndex]
         console.log('IndexPlayed:', index + 1, ', Players:', players, ', AI random index:', randomIndex, '; selected position:', max_position)
     }
-    else if (max_value >= 500) {
+    else if (max_value >= 2500) {
         console.log('IndexPlayed:', index + 1, ', Players:', players, ', AI max_value:', max_value, '; position:', max_position)
     }
-    return max_position;
+    return max_position
 }
+
 
 function getMaxMinPosition(current_position, playerColor, opponentColor, chessBoard, deepLevel) {
     chessBoard[current_position[0]][current_position[1]] = playerColor
+    let nextPlayers = {'player': opponentColor, 'opponent' : playerColor}
 
-    //console.log('getMaxMinPosition ---, current_position:', current_position, ', deepLevel:', deepLevel)
-    //console.log('getMaxMinPosition ---, chessBoard:', chessBoard)
-    //console.log('getMaxMinPosition ---, playerColor:', playerColor, ', opponentColor:', opponentColor)
+    console.log(' '.padEnd(deepLevel, '-'), 'getMaxMinPosition, current_position:', current_position, ', chessBoard:', chessBoard[current_position[0]][current_position[1]], ', players:', nextPlayers, ', deepLevel:', deepLevel)
+    //console.log(' '.padEnd(10-deepLevel, '-'), 'getMaxMinPosition, chessBoard:', chessBoard)
+
 
     let max_position = null;
-
-    /*
-    let color_none = Global.EMPTY_CARO_VALUE;
-
-    // true 代表黑棋，false 代表白棋。
-    let human_color = opponentColor;
-    let AI_color = playerColor;
-    
     let max_value = 0;
     let current_value = 0;
-    let current_position = [0, 0];
     let current_value_player_color = 0;
     let current_value_opponent_color = 0;
-    let availablePositions = [];
+    let availablePositions = []
+
+    current_position = [0, 0];
 
     availablePositions = []
     for (let row = 0; row < Global.MAX_ROWS; row++) {
         for (let col = 0; col < Global.MAX_COLUMNS; col++) {
-            if (chessBoard[row][col] === color_none) {
+            if (chessBoard[row][col] === Global.EMPTY_CARO_VALUE) {
                 current_position = [row, col];
-                current_value_player_color = evaluate(current_position, AI_color, chessBoard);
-                current_value_opponent_color = evaluate(current_position, human_color, chessBoard);
+                current_value_player_color = evaluate(current_position, nextPlayers.player, nextPlayers.player, nextPlayers.opponent, chessBoard);
+                current_value_opponent_color = evaluate(current_position, nextPlayers.opponent, nextPlayers.player, nextPlayers.opponent, chessBoard); // OR ??? current_value_opponent_color = evaluate(current_position, playerColor, opponentColor, playerColor, chessBoard);
+                
                 if (current_value_opponent_color < 0) {
                     current_value_opponent_color = 0;
                 }
                 current_value = current_value_player_color + current_value_opponent_color;
+
                 if (current_value > max_value) {
-                    //console.log('AI_position. current_value:', current_value, '. max_value:', max_value)
+                    // if (current_value >= 2500)
+                    //     console.log(' '.padEnd(deepLevel, '-'), 'getMaxMinPosition. Players:', nextPlayers, ', current_position:', current_position, ', current_value_player_color:', current_value_player_color, ', current_value_opponent_color:', current_value_opponent_color, ', current_value:', current_value, '> max_value:', max_value)
+
                     max_value = current_value;
                     max_position = current_position;
-                    availablePositions.length = 0
+                    availablePositions.length = 0 // reset the array
                     availablePositions.push(max_position)
                 }
                 else if (current_value === max_value) {
@@ -666,16 +669,35 @@ function getMaxMinPosition(current_position, playerColor, opponentColor, chessBo
     }
     
     if (availablePositions && availablePositions.length >= 2 && max_value > 0) {
-        console.log('AI max_value:', max_value, '; available positions:', availablePositions)
+        console.log(' '.padEnd(deepLevel, '-'), 'getMaxMinPosition. Players:', nextPlayers, ', AI max_value:', max_value, '; available positions:', availablePositions)
+        
+        //console.log('Players:', players, ', AI_position ---, chessBoard:', chessBoard)
+        for (let i = 0; i < availablePositions.length; i++) {
+            let tempBoard = theCaroBoard.getCopyBoard()
+            let maxMinPosition = getMaxMinPosition(availablePositions[i], nextPlayers.player, nextPlayers.opponent, tempBoard, deepLevel + 1)
+
+            console.log(' '.padEnd(deepLevel, '-'), 'getMaxMinPosition. Players:', nextPlayers, ', maxMinPosition:', maxMinPosition)
+        }
+
         let randomIndex = Math.floor(Math.random() * availablePositions.length);
         max_position = availablePositions[randomIndex]
-        console.log('AI random index:', randomIndex, '; selected position:', max_position)
+        console.log(' '.padEnd(deepLevel, '-'), 'getMaxMinPosition. Players:', nextPlayers, ', AI random index:', randomIndex, '; selected position:', max_position)
     }
-    else if (max_value >= 2000) {
-        console.log('AI max_value:', max_value, '; position:', max_position)
+
+    let point = {
+        'row': max_position[0], 
+        'column': max_position[1],
+        'maxValue': max_value,
+        'player': nextPlayers.player,
+        'opponent': nextPlayers.opponent,
     }
-    */
-    return max_position;    
+
+    console.log(' '.padEnd(deepLevel, '-'), 'getMaxMinPosition. Players:', nextPlayers, ', AI point', point, ', deepLevel:', deepLevel)
+
+    if (deepLevel < 3) {
+        return getMaxMinPosition(max_position, nextPlayers.player, nextPlayers.opponent, chessBoard, deepLevel + 1)
+    }
+    return point;
 }
 
 // todo
