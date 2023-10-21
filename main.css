@@ -1,7 +1,7 @@
 :root {
     --grid-columns: 42;
     --grid-rows: 30;
-    --cell-width-height: 23px;
+    --cell-width-height: 25px;
 
     --grid-row-headers-top: 8px;
     --grid-width: calc(var(--grid-columns) * var(--cell-width-height));
@@ -80,7 +80,7 @@
 }
 
 .grid-controllers {
-    top: var(--cell-width-height);
+    top: 0px;
     left: var(--grid-width);
     display: grid;
     margin-left: 10px;
