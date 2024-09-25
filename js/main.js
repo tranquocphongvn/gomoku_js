@@ -7,6 +7,7 @@ import CaroBoard from './board.js'
 const BASE_TIMEOUT = 300
 const RESTART_TIMEOUT = 5000
 const GOMOKU_STORAGE_KEY = 'GOMOKU_STORAGE'
+const MAX_DEPTH = 2
 
 const theCaroBoard = CaroBoard()
 
@@ -21,14 +22,14 @@ const PlayingMode = {
     Unknown: 'Unknown'
 }
 
-var isCaroX = true
+let isCaroX = true
 
-var isPlayer1Playing = false
-var isPlayer2Playing = false
-var isPCTurn = false
-var currentMode = PlayingMode.Unknown;
-var isEndGame = false
-var timerPCPlaying
+let isPlayer1Playing = false
+let isPlayer2Playing = false
+let isPCTurn = false
+let currentMode = PlayingMode.Unknown;
+let isEndGame = false
+let timerPCPlaying
 
 function initCaroBoard(playMode) {
     if (playMode === PlayingMode.Unknown)
@@ -98,17 +99,17 @@ currentMode = initCaroBoard(PlayingMode.Unknown)
 
 
 // update Caro Board state
-function updateCaroBoard(row, column, gridCaroCell) {
+function updateCaroBoard(row, column, evalValue, gridCaroCell) {
     // put Caro Value into the board
     if (isCaroX) {
-        theCaroBoard.putCaroValue(Global.CARO_X, row, column)
+        theCaroBoard.putCaroValue(Global.CARO_X, row, column, evalValue)
         gridCaroCell.innerHTML = Global.CaroXSpan
         
         lblPlayerX.classList.remove('inturn-x')
         lblPlayerO.classList.add('inturn-o')
     }
     else {
-        theCaroBoard.putCaroValue(Global.CARO_O, row, column)
+        theCaroBoard.putCaroValue(Global.CARO_O, row, column, evalValue)
         gridCaroCell.innerHTML = Global.CaroOSpan
 
         lblPlayerX.classList.add('inturn-x')
@@ -192,11 +193,11 @@ function updateCaroBoard(row, column, gridCaroCell) {
     isCaroX = !isCaroX
 }
 
-function putCaroValue(row, column) {
+function putCaroValue(row, column, evalValue) {
     if (row != null && column != null && row >=0 && column >= 0) {
         let gridCaroCell = $(`.grid-caro-cell[data-row="${row}"][data-column="${column}"]`)
         if (gridCaroCell && !gridCaroCell.innerHTML) {
-            updateCaroBoard(row, column, gridCaroCell)
+            updateCaroBoard(row, column, evalValue, gridCaroCell)
         }    
     }
 }
@@ -227,19 +228,19 @@ gridCaroContainer.onclick = function(e) {
             let row = Number(gridCaroCell.dataset.row)
             let column =  Number(gridCaroCell.dataset.column)
             
-            if (!theCaroBoard.getFirstMove()) {
-                theCaroBoard.setFirstMove(row, column)
+            if (!theCaroBoard.getFirstMoved()) {
+                theCaroBoard.setFirstMoved(row, column)
             }
-            else if (!theCaroBoard.getSecondMove())
+            else if (!theCaroBoard.getSecondMoved())
             {
-                theCaroBoard.setSecondMove(row, column)
+                theCaroBoard.setSecondMoved(row, column)
             }
 
             
             //console.log('After. isPCTurn:', isPCTurn, ', currentMode:', currentMode, ', isPlayer1 Playing:', isPlayer1Playing, ', isPlayer2 Playing:', isPlayer2Playing)
 
             //isPlayer2Playing = true
-            updateCaroBoard(row, column, gridCaroCell)
+            updateCaroBoard(row, column, 0, gridCaroCell)
 
             if (currentMode === PlayingMode.HumanvsPC && !isPCTurn) {
                 isPCTurn = true
@@ -462,10 +463,10 @@ btnLoad.onclick = function (e) {
         currentMode = initCaroBoard(PlayingMode.Unknown)
 
         if (points && points.length > 0)
-            theCaroBoard.setFirstMove(points[0].row, points[0].column)
+            theCaroBoard.setFirstMoved(points[0].row, points[0].column)
 
         if (points && points.length > 1)
-            theCaroBoard.setSecondMove(points[1].row, points[1].column)
+            theCaroBoard.setSecondMoved(points[1].row, points[1].column)
 
         points.forEach(value => {
             putCaroValue(value.row, value.column)
@@ -537,31 +538,32 @@ function AI_position(playerColor, opponentColor) {
     let current_value_opponent_color = 0;
     let chessBoard = theCaroBoard.getBoard()
 
-    let firstMove = theCaroBoard.getFirstMove()
-    let secondMove = theCaroBoard.getSecondMove()
+    let firstMoved = theCaroBoard.getFirstMoved()
+    let secondMoved = theCaroBoard.getSecondMoved()
     let availablePositions = []
 
-    if (firstMove && !secondMove) {
-        // calculate the secondMove Value
+
+    if (firstMoved && !secondMoved) {
+        // calculate the secondMoved Value
         for (let i = -1; i <= 1 ; i++) {
             for (let j = -1; j <= 1 ; j++) { // (i !== 0 && j !== 0) because the 2nd moving should in the 4 corner (diagonal)
-                if ((i !== 0 || j !== 0) && (firstMove.row + i >= 0 && firstMove.row + i < Global.MAX_ROWS && firstMove.column + j >= 0 && firstMove.column + j < Global.MAX_COLUMNS))  {
-                    availablePositions.push({row: firstMove.row + i, column: firstMove.column + j})
+                if ((i !== 0 || j !== 0) && (firstMoved.row + i >= 0 && firstMoved.row + i < Global.MAX_ROWS && firstMoved.column + j >= 0 && firstMoved.column + j < Global.MAX_COLUMNS))  {
+                    availablePositions.push({row: firstMoved.row + i, column: firstMoved.column + j})
                 }
             }
         }
 
         let availablePosition = availablePositions[Math.floor(Math.random() * availablePositions.length)]
-        max_position = [availablePosition.row, availablePosition.column]
-        theCaroBoard.setSecondMove(max_position[0], max_position[1])
+        max_position = [availablePosition.row, availablePosition.column, -2]
+        theCaroBoard.setSecondMoved(max_position[0], max_position[1])
         //console.log('availablePositions:', availablePositions, 'availablePosition:', availablePosition, 'max_position:', max_position)
 
         return max_position
     }
-    else if (!firstMove) {
-        // set firstMove at the center of the board
-        max_position = [Math.floor(Global.MAX_ROWS/2), Math.floor(Global.MAX_COLUMNS/2)]
-        theCaroBoard.setFirstMove(max_position[0], max_position[1])
+    else if (!firstMoved) {
+        // set firstMoved at the center of the board
+        max_position = [Math.floor(Global.MAX_ROWS/2), Math.floor(Global.MAX_COLUMNS/2), -1]
+        theCaroBoard.setFirstMoved(max_position[0], max_position[1])
         return max_position
     }
 
@@ -586,22 +588,22 @@ function AI_position(playerColor, opponentColor) {
 
                 if (current_value > max_value) {
                     if (current_value >= 2500)
-                        console.log('- IndexPlayed:', index + 1, ', Players:', players, ', current_position:', current_position, ', current_value_player_color:', current_value_player_color, ', current_value_opponent_color:', current_value_opponent_color, ', current_value:', current_value, '> max_value:', max_value)
+                        console.log('- IndexPlayed:', index + 1, ', Players:', players, ', current_position:', current_position, ', current_value_player_color:', current_value_player_color, ', current_value_opponent_color:', current_value_opponent_color, ', current_value:', current_value, '> max_value:', max_value);
 
                     max_value = current_value;
-                    max_position = current_position;
-                    availablePositions.length = 0 // reset the array
-                    availablePositions.push(max_position)
+                    max_position = [current_position[0], current_position[1], current_value];
+                    availablePositions.length = 0; // reset the array
+                    availablePositions.push(max_position);
                 }
                 else if (current_value === max_value) {
-                    availablePositions.push(current_position)
+                    availablePositions.push([current_position[0], current_position[1], current_value]);
                 }
             }
         }
     }
     
     if (availablePositions && availablePositions.length >= 2 && max_value > 0) {
-        console.log('IndexPlayed:', index + 1, ', Players:', players, ', AI max_value:', max_value, '; available positions:', availablePositions)
+        console.log('IndexPlayed:', index + 1, ', Players:', players, ', AI max_value:', max_value, '; available positions:', availablePositions);
         
         // console.log('Players:', players, ', AI_position ---, chessBoard:', chessBoard)
         // for (let i = 0; i < availablePositions.length; i++) {
@@ -612,14 +614,70 @@ function AI_position(playerColor, opponentColor) {
         // }
 
         let randomIndex = Math.floor(Math.random() * availablePositions.length);
-        max_position = availablePositions[randomIndex]
-        console.log('IndexPlayed:', index + 1, ', Players:', players, ', AI random index:', randomIndex, '; selected position:', max_position)
+        max_position = availablePositions[randomIndex];
+        console.log('IndexPlayed:', index + 1, ', Players:', players, ', AI random index:', randomIndex, '; selected position:', max_position);
     }
     else if (max_value >= 2500) {
-        console.log('IndexPlayed:', index + 1, ', Players:', players, ', AI max_value:', max_value, '; position:', max_position)
+        console.log('IndexPlayed:', index + 1, ', Players:', players, ', AI max_value:', max_value, '; position:', max_position);
     }
-    return max_position
+    return max_position;
 }
+
+
+
+function alphaBeta(depth, alpha, beta, isMaximizing) {
+    if (depth === 0) {
+        let players = getPlayers(isCaroX);
+        playerColor = players.player;
+        opponentColor = players.opponent;
+        return AI_position(players.player, players.opponent) // GomokuAI.evaluateBoard(this.board, this.player);
+    }
+
+    let bestValue = isMaximizing ? -Infinity : Infinity;
+
+    for (let x = 0; x < Global.MAX_ROWS; x++) {
+        for (let y = 0; y < Global.MAX_COLUMNS; y++) {
+            if (this.board.isEmpty(x, y)) {
+                this.board.placeMove(x, y, isMaximizing ? this.player : this.opponent);
+                let value = this.alphaBeta(depth - 1, alpha, beta, !isMaximizing);
+                this.board.undoMove(x, y);
+
+                if (isMaximizing) {
+                    bestValue = Math.max(bestValue, value);
+                    alpha = Math.max(alpha, bestValue);
+                } else {
+                    bestValue = Math.min(bestValue, value);
+                    beta = Math.min(beta, bestValue);
+                }
+
+                if (beta <= alpha) return bestValue;
+            }
+        }
+    }
+    return bestValue;
+}
+
+function findBestMove() {
+    let bestMove = null;
+    let bestValue = -Infinity;
+
+    for (let x = 0; x < Global.MAX_ROWS; x++) {
+        for (let y = 0; y < Global.MAX_COLUMNS; y++) {
+            if (this.board.isEmpty(x, y)) {
+                this.board.placeMove(x, y, this.player);
+                let moveValue = this.alphaBeta(MAX_DEPTH, -Infinity, Infinity, false);
+                this.board.undoMove(x, y);
+
+                if (moveValue > bestValue) {
+                    bestValue = moveValue;
+                    bestMove = { x, y };
+                }
+            }
+        }
+    }
+    return bestMove;
+}
+
 
 
 function getMaxMinPosition(current_position, playerColor, opponentColor, chessBoard, deepLevel) {

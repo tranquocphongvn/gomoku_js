@@ -3,13 +3,13 @@ import * as Global from './global.js'
 const CaroBoard = (() => {
     let caroBoard = null
     let autoPlayRadius = Global.AUTO_PLAY_RADIUS
-    let firstMove = null
-    let secondMove = null
+    let firstMoved = null
+    let secondMoved = null
     let historyPlayed = null
     let indexHistoryPlayed = -1
 
-    function convertCaroValue(value) {
-        return value === Global.CARO_X? 'X' : (value === Global.CARO_O? 'O' : '< >')
+    function convertPlayerValue(playerValue) {
+        return playerValue === Global.CARO_X? 'X' : (value === Global.CARO_O? 'O' : '< >')
     }
 
     function create2DArray(rows, columns, defaultValue) {
@@ -42,8 +42,8 @@ const CaroBoard = (() => {
         initBoard() {
             caroBoard = create2DArray(Global.MAX_ROWS, Global.MAX_COLUMNS, Global.EMPTY_CARO_VALUE)
             autoPlayRadius = Global.AUTO_PLAY_RADIUS
-            firstMove = null
-            secondMove = null
+            firstMoved = null
+            secondMoved = null
 
             historyPlayed = []
         },
@@ -56,35 +56,36 @@ const CaroBoard = (() => {
             return clone2DArray(caroBoard)
         },
 
-        getFirstMove() {
-            return firstMove
+        getFirstMoved() {
+            return firstMoved
         },
 
-        setFirstMove(row, column) {
-            firstMove = {row, column}
-            console.log('firstMove:', firstMove)
+        setFirstMoved(row, column) {
+            firstMoved = {row, column}
+            console.log('firstMoved:', firstMoved)
         },
 
-        getSecondMove() {
-            return secondMove
+        getSecondMoved() {
+            return secondMoved
         },
 
-        setSecondMove(row, column) {
-            secondMove = {row, column}
-            console.log('secondMove:', secondMove)
+        setSecondMoved(row, column) {
+            secondMoved = {row, column}
+            console.log('secondMoved:', secondMoved)
         },
 
-        putCaroValue(caroValue, row, column) {
+        putCaroValue(playerValue, row, column, evalValue) {
             let point = {
                 index: historyPlayed.length + 1,
                 row, 
-                column, 
-                caroValue
+                column,
+                evalValue,
+                playerValue
             }
             historyPlayed.push(point)
             indexHistoryPlayed = historyPlayed.length - 1
 
-            caroBoard[row][column] = caroValue
+            caroBoard[row][column] = playerValue
         },
 
         getLastIndexPlayed() {
@@ -97,7 +98,7 @@ const CaroBoard = (() => {
 
         historyToText() {
             let text = historyPlayed.reduce((accu_text, point) => {
-                        return accu_text + `[${point.row}, ${point.column}: ${point.caroValue}]; `
+                        return accu_text + `[${point.row}, ${point.column}: ${evalValue}: ${point.playerValue}]; `
                     }, 
                 '')
             return text
@@ -148,7 +149,7 @@ const CaroBoard = (() => {
             return null
         },
 
-        getRandomMove(caroValue) {
+        getRandomMove(playerValue) {
             let row = null
             let column = null
             let hasSpace = true
@@ -187,11 +188,12 @@ const CaroBoard = (() => {
             } while (caroBoard[row][column] && hasSpace)
             
             if ((row != null) && (column != null) && hasSpace) {
-                //this.putCaroValue(caroValue, row, column)
+                //this.putCaroValue(playerValue, row, column, evalValue)
                 return {
-                    caroValue, 
+                    playerValue, 
                     row, 
-                    column
+                    column,
+                    evalValue
                 }
             }
             return undefined
@@ -199,8 +201,8 @@ const CaroBoard = (() => {
 
         checkWon(row, column) {
             // get value at row, column
-            let caroValue = caroBoard[row][column]
-            if (caroValue)
+            let playerValue = caroBoard[row][column]
+            if (playerValue)
             {
                 let directions = ['horizontal', 'vertical', 'main-diagonal', 'minor-diagonal']  // directions: - , | , \ , /
                 for (let direction of directions) {
@@ -229,13 +231,13 @@ const CaroBoard = (() => {
                                 return undefined
                         } 
                         
-                        //console.log('checkWon. IN WHILE. direction:', direction, '; caroValue:', caroValue, '; countConsecutive:', countConsecutive, '; row:', countRow, '; column:', countColumn, '; caroBoard[countRow][countColumn]', caroBoard[countRow][countColumn])
+                        //console.log('checkWon. IN WHILE. direction:', direction, '; playerValue:', playerValue, '; countConsecutive:', countConsecutive, '; row:', countRow, '; column:', countColumn, '; caroBoard[countRow][countColumn]', caroBoard[countRow][countColumn])
                         countConsecutive++;
-                    } while ((countRow < Global.MAX_ROWS) && (countColumn >= 0) && (countColumn < Global.MAX_COLUMNS) && (caroValue === caroBoard[countRow][countColumn]))
+                    } while ((countRow < Global.MAX_ROWS) && (countColumn >= 0) && (countColumn < Global.MAX_COLUMNS) && (playerValue === caroBoard[countRow][countColumn]))
                     
                     // if (countConsecutive >= NUMBER_WON_ITEMS + 1)
                     // {
-                    //     console.log('checkWon. OUT WHILE. direction:', direction, '; caroValue:', caroValue, '; countConsecutive:', countConsecutive, '; row:', countRow, '; column:', countColumn, '; caroBoard[countRow][countColumn]', caroBoard[countRow][countColumn])
+                    //     console.log('checkWon. OUT WHILE. direction:', direction, '; playerValue:', playerValue, '; countConsecutive:', countConsecutive, '; row:', countRow, '; column:', countColumn, '; caroBoard[countRow][countColumn]', caroBoard[countRow][countColumn])
                     // }
 
                     // total count NUMBER_WON_ITEMS = 5 => check the prevBound (item -1) & nextBound (item +5)
@@ -270,16 +272,16 @@ const CaroBoard = (() => {
                     } 
                     // total count NUMBER_WON_ITEMS = 5 => check the prevBound (item -1) & nextBound (item +5)
                     if (countConsecutive === Global.NUMBER_WON_ITEMS + 1) { // NUMBER_WON_ITEMS + 1 because of: do {...} while()
-                        let prevBound = (prevBoundRow >= 0 && prevBoundColumn >= 0 && prevBoundColumn < Global.MAX_COLUMNS) ? caroBoard[prevBoundRow][prevBoundColumn] : caroValue
-                        let nextBound = (nextBoundRow < Global.MAX_ROWS && nextBoundColumn < Global.MAX_COLUMNS && nextBoundColumn >=0) ? caroBoard[nextBoundRow][nextBoundColumn] : caroValue
+                        let prevBound = (prevBoundRow >= 0 && prevBoundColumn >= 0 && prevBoundColumn < Global.MAX_COLUMNS) ? caroBoard[prevBoundRow][prevBoundColumn] : playerValue
+                        let nextBound = (nextBoundRow < Global.MAX_ROWS && nextBoundColumn < Global.MAX_COLUMNS && nextBoundColumn >=0) ? caroBoard[nextBoundRow][nextBoundColumn] : playerValue
 
-                        //console.log(`Check WON? direction: ${direction}, row: ${row}, column: ${column}, caroValue: ${caroValue}, prevBound(item -1)[${prevBoundRow}, ${prevBoundColumn}]: ${prevBound}, '; nextBound(item +5)[${nextBoundRow}, ${nextBoundColumn}]: ${nextBound}`)
+                        //console.log(`Check WON? direction: ${direction}, row: ${row}, column: ${column}, playerValue: ${playerValue}, prevBound(item -1)[${prevBoundRow}, ${prevBoundColumn}]: ${prevBound}, '; nextBound(item +5)[${nextBoundRow}, ${nextBoundColumn}]: ${nextBound}`)
                         
-                        if ((prevBound != caroValue) && (!prevBound || !nextBound)) { // only NUMBER_WON_ITEMS = 5 items and no bound by opponent
-                            console.log(`WON. direction: ${direction}, row: ${row}, column: ${column}, caroValue: ${caroValue} (${convertCaroValue(caroValue)}), prevBound(item -1)[${prevBoundRow}, ${prevBoundColumn}]: ${prevBound}, nextBound(item +5)[${nextBoundRow}, ${nextBoundColumn}]: ${nextBound}`)
+                        if ((prevBound != playerValue) && (!prevBound || !nextBound)) { // only NUMBER_WON_ITEMS = 5 items and no bound by opponent
+                            console.log(`WON. direction: ${direction}, row: ${row}, column: ${column}, playerValue: ${playerValue} (${convertPlayerValue(playerValue)}), prevBound(item -1)[${prevBoundRow}, ${prevBoundColumn}]: ${prevBound}, nextBound(item +5)[${nextBoundRow}, ${nextBoundColumn}]: ${nextBound}`)
                             return {
                                 direction,
-                                caroValue,
+                                playerValue,
                                 row,
                                 column
                             }
@@ -353,26 +355,26 @@ function isCaroBoardHasSpace(startRow, startColumn, endRow, endColumn) {
 }
 
 function checkWon(row, column) {
-    let caroValue = caroBoard[row][column]
-    if (caroValue)
+    let playerValue = caroBoard[row][column]
+    if (playerValue)
     {
         let count = 1
         // check by horizontal
         // count by horizontal first
-        while ((column + count < MAX_COLUMNS) && (caroValue === caroBoard[row][column + count])) {
-            //console.log('IN WHILE. caroValue:', caroValue, '; count:', count, '; row:', row, '; column:', column, '; caroBoard[row][column + count]', caroBoard[row][column + count])
+        while ((column + count < MAX_COLUMNS) && (playerValue === caroBoard[row][column + count])) {
+            //console.log('IN WHILE. playerValue:', playerValue, '; count:', count, '; row:', row, '; column:', column, '; caroBoard[row][column + count]', caroBoard[row][column + count])
             count++;
         }
         
         // total count 5 => check the item -1 & item +5
         if (count === 5) {
-            let item_1 = column >= 1 ? caroBoard[row][column - 1] : caroValue
-            let item5 = column + 5 < MAX_COLUMNS ? caroBoard[row][column + 5] : caroValue
-            if ((item_1 != caroValue) && (!item_1 || !item5)) {
-                console.log('WON. type: horizontal. row:', row, '; column:', column, '; caroValue:', caroValue, '; item -1([column - 1]):', item_1, '; item +5([column + 5]):', item5)
+            let item_1 = column >= 1 ? caroBoard[row][column - 1] : playerValue
+            let item5 = column + 5 < MAX_COLUMNS ? caroBoard[row][column + 5] : playerValue
+            if ((item_1 != playerValue) && (!item_1 || !item5)) {
+                console.log('WON. type: horizontal. row:', row, '; column:', column, '; playerValue:', playerValue, '; item -1([column - 1]):', item_1, '; item +5([column + 5]):', item5)
                 return {
                     type: 'horizontal',
-                    caroValue,
+                    playerValue,
                     row,
                     column
                 }
@@ -382,18 +384,18 @@ function checkWon(row, column) {
         count = 1
         // check by vertical
         // count by vertical first
-        while ((row + count < MAX_ROWS) && (caroValue === caroBoard[row + count][column])) {
+        while ((row + count < MAX_ROWS) && (playerValue === caroBoard[row + count][column])) {
             count++;
         }
         // total count 5 => check the item -1 & item +5
         if (count === 5) {
-            let item_1 = row >= 1 ? caroBoard[row - 1][column] : caroValue
-            let item5 = row + 5 < MAX_ROWS ? caroBoard[row + 5][column] : caroValue
-            if ((item_1 != caroValue) && (!item_1 || !item5)) {
-                console.log('WON. type: vertical. row:', row, '; column:', column, '; caroValue:', caroValue, '; item -1([row - 1]):', item_1, '; item +5([row + 5]):', item5)
+            let item_1 = row >= 1 ? caroBoard[row - 1][column] : playerValue
+            let item5 = row + 5 < MAX_ROWS ? caroBoard[row + 5][column] : playerValue
+            if ((item_1 != playerValue) && (!item_1 || !item5)) {
+                console.log('WON. type: vertical. row:', row, '; column:', column, '; playerValue:', playerValue, '; item -1([row - 1]):', item_1, '; item +5([row + 5]):', item5)
                 return {
                     type: 'vertical',
-                    caroValue,
+                    playerValue,
                     row,
                     column
                 }
@@ -403,18 +405,18 @@ function checkWon(row, column) {
         count = 1
         // check by main-diagonal
         // count by main-diagonal first
-        while ((row + count < MAX_ROWS) && (column + count < MAX_COLUMNS) && (caroValue === caroBoard[row + count][column + count])) {
+        while ((row + count < MAX_ROWS) && (column + count < MAX_COLUMNS) && (playerValue === caroBoard[row + count][column + count])) {
             count++;
         }
         // total count 5 => check the item -1 & item +5
         if (count === 5) {
-            let item_1 = row >= 1 && column >= 1 ? caroBoard[row - 1][column - 1] : caroValue
-            let item5 = row + 5 < MAX_ROWS && column + 5 < MAX_COLUMNS ? caroBoard[row + 5][column + 5] : caroValue
-            if ((item_1 != caroValue) && (!item_1 || !item5)) {
-                console.log('WON. type: main-diagonal. row:', row, '; column:', column, '; caroValue:', caroValue, '; item -1([row - 1][column - 1]):', item_1, '; item +5([row + 5][column + 5]):', item5)
+            let item_1 = row >= 1 && column >= 1 ? caroBoard[row - 1][column - 1] : playerValue
+            let item5 = row + 5 < MAX_ROWS && column + 5 < MAX_COLUMNS ? caroBoard[row + 5][column + 5] : playerValue
+            if ((item_1 != playerValue) && (!item_1 || !item5)) {
+                console.log('WON. type: main-diagonal. row:', row, '; column:', column, '; playerValue:', playerValue, '; item -1([row - 1][column - 1]):', item_1, '; item +5([row + 5][column + 5]):', item5)
                 return {
                     type: 'main-diagonal',
-                    caroValue,
+                    playerValue,
                     row,
                     column
                 }
@@ -424,19 +426,19 @@ function checkWon(row, column) {
         count = 1
         // check by minor-diagonal
         // count by minor-diagonal first
-        while ((row + count < MAX_ROWS) && (column - count >= 0) && (caroValue === caroBoard[row + count][column - count])) {
+        while ((row + count < MAX_ROWS) && (column - count >= 0) && (playerValue === caroBoard[row + count][column - count])) {
             count++;
         }
 
         // total count 5 => check the item -1 & item +5
         if (count === 5) {
-            let item_1 = row >= 1 && column + 1 < MAX_COLUMNS ? caroBoard[row - 1][column + 1] : caroValue
-            let item5 = row + 5 < MAX_ROWS && column - 5 >= 0 ? caroBoard[row + 5][column - 5] : caroValue
-            if ((item_1 != caroValue) && (!item_1 || !item5)) {
-                console.log('WON. type: minor-diagonal. row:', row, '; column:', column, '; caroValue:', caroValue, '; item -1([row - 1][column + 1]):', item_1, '; item +5([row + 5][column - 5]):', item5)
+            let item_1 = row >= 1 && column + 1 < MAX_COLUMNS ? caroBoard[row - 1][column + 1] : playerValue
+            let item5 = row + 5 < MAX_ROWS && column - 5 >= 0 ? caroBoard[row + 5][column - 5] : playerValue
+            if ((item_1 != playerValue) && (!item_1 || !item5)) {
+                console.log('WON. type: minor-diagonal. row:', row, '; column:', column, '; playerValue:', playerValue, '; item -1([row - 1][column + 1]):', item_1, '; item +5([row + 5][column - 5]):', item5)
                 return {
                     type: 'minor-diagonal',
-                    caroValue,
+                    playerValue,
                     row,
                     column
                 }
@@ -453,7 +455,7 @@ function checkWonTicTacToe() {
         {
             return {
                 type: 'horizontal',
-                caroValue: caroBoard[row][0],
+                playerValue: caroBoard[row][0],
                 row: row,
                 column: 0
             }
@@ -465,7 +467,7 @@ function checkWonTicTacToe() {
         {
             return {
                 type: 'vertical',
-                caroValue: caroBoard[0][col],
+                playerValue: caroBoard[0][col],
                 row: 0,
                 column: col
             }
@@ -476,7 +478,7 @@ function checkWonTicTacToe() {
     {
         return {
             type: 'main-diagonal',
-            caroValue: caroBoard[0][0],
+            playerValue: caroBoard[0][0],
             row: 0,
             column: 0
         }
@@ -486,7 +488,7 @@ function checkWonTicTacToe() {
     {
         return {
             type: 'minor-diagonal',
-            caroValue: caroBoard[0][2],
+            playerValue: caroBoard[0][2],
             row: 0,
             column: 2
         }
@@ -499,7 +501,7 @@ function putCaroValueRandom() {
     let result = theCaroBoard.getRandomMove(isCaroX ? Global.CARO_X : Global.CARO_O)
     if (result)
     {   
-        //console.log('putCaroValueRandom: ', result.caroValue, result.row, result.column)
+        //console.log('putCaroValueRandom: ', result.playerValue, result.row, result.column)
         putCaroValue(result.row, result.column)
     }
     isPlayer1Playing = false
