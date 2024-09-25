@@ -9,7 +9,7 @@ const CaroBoard = (() => {
     let indexHistoryPlayed = -1
 
     function convertPlayerValue(playerValue) {
-        return playerValue === Global.CARO_X? 'X' : (value === Global.CARO_O? 'O' : '< >')
+        return playerValue === Global.CARO_X? Global.PLAYER_X : (playerValue === Global.CARO_O? Global.PLAYER_O : '<N/A>')
     }
 
     function create2DArray(rows, columns, defaultValue) {
@@ -88,6 +88,10 @@ const CaroBoard = (() => {
             caroBoard[row][column] = playerValue
         },
 
+        convertPlayerValue(playerValue) {
+            return convertPlayerValue(playerValue)
+        },
+
         getLastIndexPlayed() {
             return historyPlayed.length - 1
         },
@@ -98,7 +102,7 @@ const CaroBoard = (() => {
 
         historyToText() {
             let text = historyPlayed.reduce((accu_text, point) => {
-                        return accu_text + `[${point.row}, ${point.column}: ${evalValue}: ${point.playerValue}]; `
+                        return accu_text + `[${point.row}, ${point.column}: ${point.evalValue}: ${point.playerValue}]; `
                     }, 
                 '')
             return text

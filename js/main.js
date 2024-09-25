@@ -136,7 +136,7 @@ function updateCaroBoard(row, column, evalValue, gridCaroCell) {
 
             showWonItems(checkWhoWon)
             
-            let msg = `${checkWhoWon.caroValue === Global.CARO_X? Global.PLAYER_X : checkWhoWon.caroValue === Global.CARO_O? Global.PLAYER_O : checkWhoWon.caroValue} has Won by [${checkWhoWon.direction}]!!! at (row: ${checkWhoWon.row}, column: ${checkWhoWon.column})`
+            let msg = `${theCaroBoard.convertPlayerValue(checkWhoWon.playerValue)} has Won by [${checkWhoWon.direction}]!!! at (row: ${checkWhoWon.row}, column: ${checkWhoWon.column})`
             console.log(msg)
             /*
             setTimeout(() => {
@@ -151,7 +151,7 @@ function updateCaroBoard(row, column, evalValue, gridCaroCell) {
             let ai_position = AI_position()
             if (ai_position) {
                 //console.log('AI_position:', ai_position)
-                putCaroValue(ai_position[0], ai_position[1])
+                putCaroValue(ai_position[0], ai_position[1], ai_position[2])
             }
             else {
                 isEndGame = true
@@ -167,7 +167,7 @@ function updateCaroBoard(row, column, evalValue, gridCaroCell) {
             let ai_position = AI_position()
             if (ai_position) {
                 //console.log('AI_position:', ai_position)
-                putCaroValue(ai_position[0], ai_position[1])
+                putCaroValue(ai_position[0], ai_position[1], ai_position[2])
             }
             else {
                 console.log('AI_position: no available position. Please restart the game')
@@ -179,7 +179,7 @@ function updateCaroBoard(row, column, evalValue, gridCaroCell) {
             let ai_position = AI_position()
             if (ai_position) {
                 //console.log('AI_position:', ai_position)
-                putCaroValue(ai_position[0], ai_position[1])
+                putCaroValue(ai_position[0], ai_position[1], ai_position[2])
             }
             else {
                 console.log('AI_position: no available position. Please restart the game')
@@ -286,7 +286,7 @@ btnPCvsHuman.onclick = function(e) {
 
         let ai_position = AI_position()
         if (ai_position) {
-            putCaroValue(ai_position[0], ai_position[1])
+            putCaroValue(ai_position[0], ai_position[1], ai_position[2])
         }
         isPCTurn = false
     }
@@ -363,7 +363,7 @@ btnPrev.onclick = function(e) {
 
         let gridCaroCell = $(`.grid-caro-cell[data-row="${point.row}"][data-column="${point.column}"]`)
         if (gridCaroCell && gridCaroCell.innerHTML) {
-            gridCaroCell.innerHTML = point.caroValue === Global.CARO_X? Global.CaroXSpan : Global.CaroOSpan
+            gridCaroCell.innerHTML = point.playerValue === Global.CARO_X? Global.CaroXSpan : Global.CaroOSpan
 
             setTimeout( () => {
                 const img = $("img.newest")
@@ -385,7 +385,7 @@ btnNext.onclick = function(e) {
     if (point && point.row != null && point.column != null && point.row >=0 && point.column >= 0) {
         let gridCaroCell = $(`.grid-caro-cell[data-row="${point.row}"][data-column="${point.column}"]`)
         if (gridCaroCell && !gridCaroCell.innerHTML) {
-            gridCaroCell.innerHTML = point.caroValue === Global.CARO_X? Global.CaroXSpan : Global.CaroOSpan
+            gridCaroCell.innerHTML = point.playerValue === Global.CARO_X? Global.CaroXSpan : Global.CaroOSpan
 
             setTimeout( () => {
                 const img = $("img.newest")
@@ -406,7 +406,7 @@ btnLast.onclick = function (e) {
     let ai_position = AI_position()
     if (ai_position) {
         //console.log('AI_position:', ai_position)
-        putCaroValue(ai_position[0], ai_position[1])
+        putCaroValue(ai_position[0], ai_position[1], ai_position[2])
     }
 }
 
@@ -441,7 +441,8 @@ btnLoad.onclick = function (e) {
                     index: index + 1,
                     row: parseInt(values[0]),
                     column: parseInt(values[1]),
-                    caroValue: parseInt(values[2])
+                    evalValue: parseInt(values[2]),
+                    playerValue: parseInt(values[3])
                 }
                 return point
             }
@@ -469,7 +470,7 @@ btnLoad.onclick = function (e) {
             theCaroBoard.setSecondMoved(points[1].row, points[1].column)
 
         points.forEach(value => {
-            putCaroValue(value.row, value.column)
+            putCaroValue(value.row, value.column, value.evalValue)
         })
     }
     else {
@@ -489,7 +490,7 @@ function startPCvsPCMode(newGame = true)
 
     let ai_position = AI_position()
     if (ai_position) {
-        putCaroValue(ai_position[0], ai_position[1])
+        putCaroValue(ai_position[0], ai_position[1], ai_position[2])
     }
     isPCTurn = false
 }
